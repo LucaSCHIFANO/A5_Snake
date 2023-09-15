@@ -1,14 +1,16 @@
-#include "sh_constants.hpp"
 #include "cl_resources.hpp"
 #include "cl_grid.hpp"
 #include "cl_snake.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
-#include <iostream>
+#include "sh_constants.hpp"
+#include "sh_protocol.hpp"
+
 
 const int windowWidth = cellSize * gridWidth;
 const int windowHeight = cellSize * gridHeight;
 
+void ConnectionToServer(SOCKET sock);
 void game();
 void tick(Grid& grid, Snake& snake);
 
@@ -19,6 +21,16 @@ int main()
 	// mais ils sont aussi plus verbeux / complexes à utiliser, ce n'est pas tr�s int�ressant ici.
 	std::srand(std::time(nullptr));
 
+	WSADATA data;
+	WSAStartup(MAKEWORD(2, 2), &data);
+
+	SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock == INVALID_SOCKET)
+	{
+		std::cerr << "failed to open socket (" << WSAGetLastError() << ")\n";
+		return EXIT_FAILURE;
+	}
+
 	/*
 	// D�sactivation de l'algorithme de naggle sur la socket `sock`
 	BOOL option = 1;
@@ -28,8 +40,37 @@ int main()
 		return EXIT_FAILURE;
 	}
 	*/
-
+	ConnectionToServer(sock);
 	game();
+}
+
+void ConnectionToServer(SOCKET sock) 
+{
+	std::cout << "Input the ID port please : ";
+	std::string ipAdress;
+	std::getline(std::cin, ipAdress);
+
+	//message -> "127.0.0.1"
+	if (ipAdress.empty())
+	{
+		shutdown(sock, SD_BOTH);
+		return;
+	}
+
+	sockaddr_in bindAddr;
+	bindAddr.sin_family = AF_INET;
+	bindAddr.sin_port = htons(14769);
+
+	inet_pton(bindAddr.sin_family, ipAdress.data(), &bindAddr.sin_addr);
+
+	if (connect(sock, reinterpret_cast<sockaddr*>(&bindAddr), sizeof(bindAddr)) == SOCKET_ERROR)
+	{
+		std::cout << "failed to connect to server (" << WSAGetLastError() << ")";
+		return;
+	}
+	else std::cout << "\nConnected to server ! \n" << std::endl;
+
+	SendData(sock, ipAdress.data(), ipAdress.length());
 }
 
 void game()

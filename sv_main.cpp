@@ -221,11 +221,9 @@ int server(SOCKET sock)
 					else
 					{
 						// Nous avons re�u un message de la part du client, affichons-le et renvoyons le aux autres clients
-
 						std::size_t oldSize = client.pendingData.size();
 						client.pendingData.resize(oldSize + byteRead);
 						std::memcpy(&client.pendingData[oldSize], buffer, byteRead);
-
 						while (client.pendingData.size() >= sizeof(std::uint16_t))
 						{
 							// -- R�ception du message --
@@ -265,12 +263,15 @@ int server(SOCKET sock)
 							std::cout << message << std::endl;
 							for (Client& c : clients)
 							{
+								//if (c.socket == client.socket) continue;
+
 								if (send(c.socket, (char*)sendBuffer.data(), sendBuffer.size(), 0) == SOCKET_ERROR)
 								{
 									std::cerr << "failed to send message to client #" << c.id << ": (" << WSAGetLastError() << ")\n";
 									// Pas de return ici pour �viter de casser le serveur sur l'envoi à un seul client,
 									// contentons-nous pour l'instant de logger l'erreur
 								}
+								std::cout << "Message sent " << std::endl;
 							}
 						}
 					}

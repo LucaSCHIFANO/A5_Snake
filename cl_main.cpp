@@ -105,15 +105,34 @@ void game(SOCKET sock)
 
 				// On copie le contenu du message
 				//switch(OPcode)
+
+				std::uint8_t opcode;
+				std::memcpy(&opcode, &pendingData[sizeof(messageSize)], sizeof(uint8_t));
+				Opcode code = (Opcode)opcode;
+
 				std::vector<std::uint8_t> receivedMessage(messageSize);
-
-				std::memcpy(receivedMessage.data(), &pendingData[sizeof(messageSize)], messageSize);
-
-				// On retire la taille que nous de traiter des donnees en attente
 				std::size_t handledSize = sizeof(messageSize) + messageSize;
-				pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-				std::cout << "-> " << receivedMessage.data() << std::endl;
-			}
+				switch (code)
+				{
+				case OpcodeConnection:
+
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					// On retire la taille que nous de traiter des donnees en attente
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					std::cout << "-> " << (int)receivedMessage[0] << " connected? : " << (int)receivedMessage[1] << std::endl;
+					//1 => create new player with snake
+					//0 => remove player and snake
+
+					break;
+				case OpcodeSnake:
+					break;
+				case OpcodeApple:
+					break;
+				default:
+					break;
+				}
+				}
 		}
 	});
 
@@ -252,6 +271,7 @@ void game(SOCKET sock)
 			if (!snake.TestCollision(sf::Vector2i(x, y), true))
 			{
 				grid.SetCell(x, y, CellType::Apple);
+
 
 				// On pr�voit la prochaine apparition de pomme
 				nextApple += appleInterval;

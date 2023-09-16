@@ -191,14 +191,14 @@ int server(SOCKET sock)
 					//opcode connection
 					//id du client
 					//bool true = connected / false == disconnected
-					uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(bool);
+					uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
 					std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
-					size = htonl(size);
+					size = htons(size);
 
 					memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 					sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
 					memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &client.id , sizeof(std::uint8_t));
-					sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 1;
+					sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01;
 
 					for (Client& c : clients)
 					{
@@ -255,7 +255,7 @@ int server(SOCKET sock)
 
 							if (client.pendingData.size() - sizeof(messageSize) < messageSize)
 								break;
-
+								
 							// On copie le contenu du message depuis les donn�es en attente
 							std::string receivedMessage(messageSize, ' ');
 							//std::memcpy(&message[0], &client.pendingData[sizeof(messageSize)], messageSize);

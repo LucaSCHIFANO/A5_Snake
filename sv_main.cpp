@@ -189,12 +189,17 @@ int server(SOCKET sock)
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
 					std::vector<std::uint8_t> sendBuffer = SerializeConnection(client.id, true);
+					std::vector<std::uint8_t> receiveBuffer = SerializeConnection(client.id, true);
 
 					for (Client& c : clients)
 					{
-						//if (c.socket == client.socket) continue;
+						if (c.socket == client.socket)
+							continue;
 
-						SendData(c.socket, sendBuffer.data(), sendBuffer.size());
+						SendData(c.socket, sendBuffer.data(), sendBuffer.size()); //inform other of new client
+
+						receiveBuffer = SerializeConnection(c.id, true);
+						SendData(client.socket, receiveBuffer.data(), receiveBuffer.size()); //inform new client of others
 					}
 
 				}

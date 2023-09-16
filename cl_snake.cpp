@@ -48,9 +48,10 @@ float computeRotationForCorner(const sf::Vector2i& from, const sf::Vector2i& cor
 	}
 }
 
-Snake::Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color) :
+Snake::Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id) :
 m_color(color),
-m_followingDir(direction)
+m_followingDir(direction),
+clientId(id)
 {
 	Respawn(spawnPosition, direction);
 }
@@ -168,4 +169,14 @@ bool Snake::TestCollision(const sf::Vector2i& position, bool testHead)
 	}
 
 	return false;
+}
+
+int Snake::GetId()
+{
+	return clientId;
+}
+
+void Snake::SetId(int i)
+{
+	clientId = i;
 }

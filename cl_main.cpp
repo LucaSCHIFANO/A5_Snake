@@ -75,6 +75,9 @@ void ConnectionToServer(SOCKET sock)
 
 void game(SOCKET sock)
 {
+
+	std::vector<Snake> enemySnakes;
+
 	//Loop recv
 	bool running = true;
 	std::thread readThread([&]()
@@ -120,9 +123,24 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "-> " << (int)receivedMessage[0] << " connected? : " << (int)receivedMessage[1] << std::endl;
-					//1 => create new player with snake
-					//0 => remove player and snake
+
+					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
+					{
+						std::vector<Snake>::iterator it;
+						for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
+						{
+							if (it->GetId() == (int)receivedMessage[0]) {
+								enemySnakes.erase(it);
+								break;
+							}
+						}
+					}
+					else  //1 => create new player with snake
+					{
+						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
+						enemySnakes.push_back(clientSnake);
+					}
+					
 
 					break;
 				case OpcodeSnake:
@@ -178,8 +196,8 @@ void game(SOCKET sock)
 	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
 	// Ces valeurs doivent toujours �tre à 1 ou -1 et la valeur de l'autre axe doit �tre à z�ro (nos serpents ne peuvent pas se d�placer
 	// en diagonale)
-	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green);
-
+	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0);
+	
 	// On déclare quelques petits outils pour g�rer le temps
 	sf::Clock clock;
 	
@@ -286,6 +304,10 @@ void game(SOCKET sock)
 
 		// On affiche le serpent
 		snake.Draw(window, resources);
+		for (size_t i = 0; i < enemySnakes.size(); i++)
+		{
+			enemySnakes[i].Draw(window, resources);
+		}
 
 		// On actualise l'affichage de la fen�tre
 		window.display();

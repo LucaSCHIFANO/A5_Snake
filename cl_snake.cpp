@@ -48,6 +48,15 @@ float computeRotationForCorner(const sf::Vector2i& from, const sf::Vector2i& cor
 	}
 }
 
+Snake::Snake()
+{
+	sf::Vector2i spawnPosition(0, 0);
+	m_followingDir = sf::Vector2i(0, 1);
+	m_color = sf::Color::Blue;
+	clientId = 0;
+	Respawn(spawnPosition, m_followingDir);
+}
+
 Snake::Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id) :
 m_color(color),
 m_followingDir(direction),

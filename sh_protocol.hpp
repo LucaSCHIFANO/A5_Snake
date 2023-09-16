@@ -78,8 +78,6 @@ std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
 	std::int8_t horizontal = direction.x;
 	std::int8_t vertical = direction.y;
 
-	std::cout << direction.x << " : " << (int)horizontal << std::endl;
-
 	//Send Message
 	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::int8_t) + sizeof(std::int8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);

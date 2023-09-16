@@ -12,7 +12,7 @@ const int windowHeight = cellSize * gridHeight;
 
 void ConnectionToServer(SOCKET sock);
 void game(SOCKET sock);
-void tick(Grid& grid, Snake& snake, SOCKET sock);
+void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnakes);
 
 int main()
 {
@@ -112,12 +112,10 @@ void game(SOCKET sock)
 				std::memcpy(&opcode, &pendingData[sizeof(messageSize)], sizeof(uint8_t));
 				Opcode code = (Opcode)opcode;
 
-				std::vector<std::uint8_t> receivedMessage(messageSize);
 				std::size_t handledSize = sizeof(messageSize) + messageSize;
-				switch (code)
+				if (code == OpcodeConnection)
 				{
-				case OpcodeConnection:
-
+					std::vector<std::uint8_t> receivedMessage(messageSize);
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 					// On retire la taille que nous de traiter des donnees en attente
@@ -126,31 +124,29 @@ void game(SOCKET sock)
 					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
 					{
 						enemySnakes.erase((int)receivedMessage[0]);
-						
+
 					}
 					else  //1 => create new player with snake
 					{
 						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
 						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
 					}
-					
 
-					break;
-				case OpcodeSnake:
+				}
+				else if (code == OpcodeSnake)
+				{
+					std::vector<std::int8_t> receivedMessage(messageSize);
+
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
-					
-					
-					break;
-				case OpcodeApple:
-					break;
-				default:
-					break;
+
+					enemySnakes[(int)receivedMessage[0]].SetFollowingDirection(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
+
 				}
-				}
+			}
 		}
 	});
 
@@ -271,10 +267,11 @@ void game(SOCKET sock)
 		if (now >= nextTick)
 		{
 			// On met à jour la logique du jeu
-			tick(grid, snake, sock);
+			tick(grid, snake, sock, enemySnakes);
 
 			// On pr�voit la prochaine mise à jour
 			nextTick += tickInterval;
+
 		}
 
 		// On v�rifie si assez de temps s'est �coul� pour faire apparaitre une nouvelle pomme
@@ -315,11 +312,17 @@ void game(SOCKET sock)
 	}
 }
 
-void tick(Grid& grid, Snake& snake, SOCKET sock)
+void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnakes)
 {
 	snake.Advance();
 	std::vector<std::uint8_t> sendSnakeBuffer = SerializeSnakeToServer(snake.GetFollowingDirection());
 	SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
+	
+	auto it = enemySnakes.begin();
+	for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
+	{
+		it->second.Advance();
+	}
 
 	// On teste la collision de la t�te du serpent avec la grille
 	sf::Vector2i headPos = snake.GetHeadPosition();

@@ -263,23 +263,23 @@ int server(SOCKET sock)
 							Opcode code = (Opcode)opcode;
 
 							std::vector<std::uint8_t> receivedMessage(messageSize);
-							switch (code)
-							{
-							case OpcodeConnection:
-								break;
-							case OpcodeSnake:
+
+							if (code == OpcodeSnake) {
+
 								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
-								std::cout << "-> Client #" << client.id << "'s direction :" << (int)receivedMessage[0] << ", " << (int)receivedMessage[1] << std::endl;
+								std::vector<std::uint8_t> messageToSend = SerializeSnakeToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+								
+								for (Client& c : clients)
+								{
+									if (c.socket == client.socket) continue;
 
+									SendData(c.socket, messageToSend.data(), messageToSend.size());
+								}
 
-								break;
-							case OpcodeApple:
-								break;
-							default:
-								break;
+								//std::cout << "-> Client #" << client.id << "'s direction :" << (int)receivedMessage[0] << ", " << (int)receivedMessage[1] << std::endl;
 							}
 
 #pragma region MyRegion

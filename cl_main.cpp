@@ -125,6 +125,11 @@ void game(SOCKET sock)
 
 					break;
 				case OpcodeSnake:
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					// On retire la taille que nous de traiter des donnees en attente
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					break;
 				case OpcodeApple:
 					break;

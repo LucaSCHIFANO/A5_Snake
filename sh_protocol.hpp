@@ -79,14 +79,15 @@ std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
 	std::uint8_t vertical = direction.y;
 
 	//Send Message
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
 	size = htons(size);
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 
 
 	return sendBuffer;

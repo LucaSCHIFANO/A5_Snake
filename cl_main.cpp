@@ -5,13 +5,14 @@
 #include <SFML/Window.hpp>
 #include "sh_constants.hpp"
 #include "sh_protocol.hpp"
+#include <thread>
 
 
 const int windowWidth = cellSize * gridWidth;
 const int windowHeight = cellSize * gridHeight;
 
 void ConnectionToServer(SOCKET sock);
-void game();
+void game(SOCKET sock);
 void tick(Grid& grid, Snake& snake);
 
 int main()
@@ -41,11 +42,12 @@ int main()
 	}
 	*/
 	ConnectionToServer(sock);
-	game();
+	game(sock);
 }
 
 void ConnectionToServer(SOCKET sock) 
 {
+	//Input ID port
 	std::cout << "Input the ID port please : ";
 	std::string ipAdress;
 	std::getline(std::cin, ipAdress);
@@ -66,15 +68,71 @@ void ConnectionToServer(SOCKET sock)
 	if (connect(sock, reinterpret_cast<sockaddr*>(&bindAddr), sizeof(bindAddr)) == SOCKET_ERROR)
 	{
 		std::cout << "failed to connect to server (" << WSAGetLastError() << ")";
-		return;
+		exit(1);
 	}
-	else std::cout << "\nConnected to server ! \n" << std::endl;
-
-	SendData(sock, ipAdress.data(), ipAdress.length());
+	else std::cout << "\nConnected to server ! \n" << std::endl;	
 }
 
-void game()
+void game(SOCKET sock)
 {
+	//Loop recv
+	bool running = true;
+	std::thread readThread([&]()
+	{
+		std::vector<std::uint8_t> pendingData;
+		while (running)
+		{
+			// On attend que le serveur nous envoie un message (ou se déconnecte)
+			std::vector<std::uint8_t> response = ReadData(sock);
+
+			// Nous avons re�u un message de la part du server, affichons-le
+			std::size_t oldSize = pendingData.size();
+			pendingData.resize(oldSize + response.size());
+			std::memcpy(&pendingData[oldSize], response.data(), response.size());
+
+
+			while (pendingData.size() >= sizeof(std::uint16_t))
+			{
+				// -- Reception du message --
+
+				// On deserialise la taille du message
+				std::uint16_t messageSize;
+				std::memcpy(&messageSize, &pendingData[0], sizeof(messageSize));
+				messageSize = ntohs(messageSize);
+
+				if (pendingData.size() - sizeof(messageSize) < messageSize)
+					break;
+
+				// On copie le contenu du message
+				std::string receivedMessage(messageSize, ' ');
+				std::memcpy(receivedMessage.data(), &pendingData[sizeof(messageSize)], messageSize);
+
+				// On retire la taille que nous de traiter des donnees en attente
+				std::size_t handledSize = sizeof(messageSize) + messageSize;
+				pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+				std::cout << "-> " << receivedMessage << std::endl;
+			}
+		}
+	});
+
+	std::string  ipAdress = "127.0.0.1";
+
+	//Send Message
+	std::vector<std::uint8_t> bytesMessage(sizeof(std::uint16_t) + ipAdress.size() * sizeof(char));
+
+	std::uint16_t messageLength = ipAdress.size();
+	messageLength = htons(messageLength);
+	std::memcpy(&bytesMessage[0], &messageLength, sizeof(std::uint16_t));
+
+	std::memcpy(&bytesMessage[sizeof(std::uint16_t)], ipAdress.data(), ipAdress.size());
+
+	SendData(sock, (char*)bytesMessage.data(), bytesMessage.size());
+
+
+
+
+
+
 	// Chargement des assets du jeu
 	Resources resources;
 	if (!LoadResources(resources))

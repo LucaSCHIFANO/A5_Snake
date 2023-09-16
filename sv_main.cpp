@@ -1,15 +1,13 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
+#include "sh_protocol.hpp"
 #include "sh_constants.hpp"
 #include <SFML/System/Clock.hpp> //< Gestion du temps avec la SFML
 #include <cassert> //< assert
 #include <iostream> //< std::cout/std::cerr
 #include <string> //< std::string / std::string_view
 #include <thread> //< std::thread
-#include <vector> //< std::vector
-#include <winsock2.h> //< Header principal de Winsock
-#include <ws2tcpip.h> //< Header pour le mod�le TCP/IP, permettant notamment la gestion d'adresses IP
 
 // Sous Windows il faut linker ws2_32.lib (Propriétés du projet => �diteur de lien => Entr�e => D�pendances suppl�mentaires)
 // Ce projet est �galement configur� en C++17 (ce n'est pas n�cessaire à winsock)
@@ -224,6 +222,7 @@ int server(SOCKET sock)
 						std::size_t oldSize = client.pendingData.size();
 						client.pendingData.resize(oldSize + byteRead);
 						std::memcpy(&client.pendingData[oldSize], buffer, byteRead);
+
 						while (client.pendingData.size() >= sizeof(std::uint16_t))
 						{
 							// -- R�ception du message --
@@ -231,15 +230,15 @@ int server(SOCKET sock)
 							// On d�serialise la taille du message
 							std::uint16_t messageSize;
 							std::memcpy(&messageSize, &client.pendingData[0], sizeof(messageSize));
-
 							messageSize = ntohs(messageSize);
 
 							if (client.pendingData.size() - sizeof(messageSize) < messageSize)
 								break;
 
 							// On copie le contenu du message depuis les donn�es en attente
-							std::string message(messageSize, ' ');
-							std::memcpy(&message[0], &client.pendingData[sizeof(messageSize)], messageSize);
+							std::string receivedMessage(messageSize, ' ');
+							//std::memcpy(&message[0], &client.pendingData[sizeof(messageSize)], messageSize);
+							std::memcpy(receivedMessage.data(), &client.pendingData[sizeof(messageSize)], messageSize);
 
 							// On retire la taille que nous de traiter des donn�es en attente
 							std::size_t handledSize = sizeof(messageSize) + messageSize;
@@ -248,30 +247,25 @@ int server(SOCKET sock)
 							// -- Gestion du message --
 
 							// Pr�fixons le message d'un "Client #X - " pour identifier le client
-							message = "Client #" + std::to_string(client.id) + " - " + message;
+							receivedMessage = "Client #" + std::to_string(client.id) + " - " + receivedMessage;
 
 							// On pr�fixe la taille du message avant celui-ci
-							std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + message.size());
+							std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + receivedMessage.size());
 
 							// On s�rialise l'entier 16bits
-							std::uint16_t size = htons(message.size());
+							std::uint16_t size = htons(receivedMessage.size());
 							std::memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 
 							// On �crit la chaine de caract�re
-							std::memcpy(&sendBuffer[sizeof(std::uint16_t)], message.data(), message.size());
+							std::memcpy(&sendBuffer[sizeof(std::uint16_t)], receivedMessage.data(), receivedMessage.size());
 
-							std::cout << message << std::endl;
+							std::cout << receivedMessage << std::endl;
 							for (Client& c : clients)
 							{
 								//if (c.socket == client.socket) continue;
 
-								if (send(c.socket, (char*)sendBuffer.data(), sendBuffer.size(), 0) == SOCKET_ERROR)
-								{
-									std::cerr << "failed to send message to client #" << c.id << ": (" << WSAGetLastError() << ")\n";
-									// Pas de return ici pour �viter de casser le serveur sur l'envoi à un seul client,
-									// contentons-nous pour l'instant de logger l'erreur
-								}
-								std::cout << "Message sent " << std::endl;
+								//SendData(c.socket, receivedMessage.data(), receivedMessage.size());
+								SendData(c.socket, sendBuffer.data(), sendBuffer.size());
 							}
 						}
 					}

@@ -8,21 +8,21 @@
 
 std::vector<std::uint8_t> ReadData(SOCKET sock)
 {
-    std::vector<std::uint8_t> output(1024);
-    int byteRead = recv(sock, reinterpret_cast<char*>(output.data()), static_cast<int>(output.size()), 0);
-    if (byteRead == 0 || byteRead == SOCKET_ERROR)
-    {
-        if (byteRead == 0)
-            std::cout << "server closed connection" << std::endl;
-        else
-            std::cerr << "failed to read data from server (" << WSAGetLastError() << ")" << std::endl;
+	std::vector<std::uint8_t> output(1024);
+	int byteRead = recv(sock, reinterpret_cast<char*>(output.data()), static_cast<int>(output.size()), 0);
+	if (byteRead == 0 || byteRead == SOCKET_ERROR)
+	{
+		if (byteRead == 0)
+			std::cout << "server closed connection" << std::endl;
+		else
+			std::cerr << "failed to read data from server (" << WSAGetLastError() << ")" << std::endl;
 
-        throw std::runtime_error("failed to read data");
-    }
+		throw std::runtime_error("failed to read data");
+	}
 
-    output.resize(byteRead);
+	output.resize(byteRead);
 
-    return output;
+	return output;
 }
 
 void SendData(SOCKET sock, const void* data, std::size_t dataLength)

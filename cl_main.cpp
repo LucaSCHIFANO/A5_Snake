@@ -2,7 +2,6 @@
 #include "cl_grid.hpp"
 #include "cl_snake.hpp"
 #include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 #include "sh_constants.hpp"
 #include "sh_protocol.hpp"
 #include <thread>
@@ -13,7 +12,7 @@ const int windowHeight = cellSize * gridHeight;
 
 void ConnectionToServer(SOCKET sock);
 void game(SOCKET sock);
-void tick(Grid& grid, Snake& snake);
+void tick(Grid& grid, Snake& snake, SOCKET sock);
 
 int main()
 {
@@ -253,7 +252,7 @@ void game(SOCKET sock)
 		if (now >= nextTick)
 		{
 			// On met à jour la logique du jeu
-			tick(grid, snake);
+			tick(grid, snake, sock);
 
 			// On pr�voit la prochaine mise à jour
 			nextTick += tickInterval;
@@ -292,9 +291,11 @@ void game(SOCKET sock)
 	}
 }
 
-void tick(Grid& grid, Snake& snake)
+void tick(Grid& grid, Snake& snake, SOCKET sock)
 {
 	snake.Advance();
+	std::vector<std::uint8_t> sendSnakeBuffer = SerializeSnakeToServer(snake.GetFollowingDirection());
+	SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
 
 	// On teste la collision de la t�te du serpent avec la grille
 	sf::Vector2i headPos = snake.GetHeadPosition();

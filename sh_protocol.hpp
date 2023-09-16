@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <SFML/Window.hpp>
 #include <winsock2.h> //< Header principal de Winsock
 #include <ws2tcpip.h> //< Header pour le modèle TCP/IP, permettant notamment la gestion d'adresses IP
 
@@ -41,3 +42,52 @@ enum Opcode
 	OpcodeSnake = 1,
 	OpcodeApple = 2
 };
+
+std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
+{
+	//size
+	//opcode
+	//int verticale
+	//horizontal
+
+	std::uint8_t horizontal = direction.x;
+	std::uint8_t vertical= direction.y;
+
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
+{
+	//size
+	//opcode
+	//id
+	//int verticale
+	//horizontal
+
+	std::uint8_t horizontal = direction.x;
+	std::uint8_t vertical = direction.y;
+
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+
+
+	return sendBuffer;
+}

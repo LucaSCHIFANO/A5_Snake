@@ -255,38 +255,61 @@ int server(SOCKET sock)
 
 							if (client.pendingData.size() - sizeof(messageSize) < messageSize)
 								break;
-								
-							// On copie le contenu du message depuis les donn�es en attente
-							std::string receivedMessage(messageSize, ' ');
-							//std::memcpy(&message[0], &client.pendingData[sizeof(messageSize)], messageSize);
-							std::memcpy(receivedMessage.data(), &client.pendingData[sizeof(messageSize)], messageSize);
 
 							// On retire la taille que nous de traiter des donn�es en attente
 							std::size_t handledSize = sizeof(messageSize) + messageSize;
-							client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+							std::uint8_t opcode;
+							std::memcpy(&opcode, &client.pendingData[sizeof(messageSize)], sizeof(uint8_t));
+							Opcode code = (Opcode)opcode;
 
-							// -- Gestion du message --
-
-							// Pr�fixons le message d'un "Client #X - " pour identifier le client
-							receivedMessage = "Client #" + std::to_string(client.id) + " - " + receivedMessage;
-
-							// On pr�fixe la taille du message avant celui-ci
-							std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + receivedMessage.size());
-
-							// On s�rialise l'entier 16bits
-							std::uint16_t size = htons(receivedMessage.size());
-							std::memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-
-							// On �crit la chaine de caract�re
-							std::memcpy(&sendBuffer[sizeof(std::uint16_t)], receivedMessage.data(), receivedMessage.size());
-
-							std::cout << receivedMessage << std::endl;
-							for (Client& c : clients)
+							std::vector<std::uint8_t> receivedMessage(messageSize);
+							switch (code)
 							{
-								if (c.socket == client.socket) continue;
+							case OpcodeConnection:
+								break;
+							case OpcodeSnake:
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
-								SendData(c.socket, sendBuffer.data(), sendBuffer.size());
+								// On retire la taille que nous de traiter des donnees en attente
+								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+								std::cout << "-> Client #" << client.id << "'s direction :" << (int)receivedMessage[0] << ", " << (int)receivedMessage[1] << std::endl;
+
+
+								break;
+							case OpcodeApple:
+								break;
+							default:
+								break;
 							}
+
+#pragma region MyRegion
+
+
+							//client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+
+							//// -- Gestion du message --
+
+							//// Pr�fixons le message d'un "Client #X - " pour identifier le client
+							//receivedMessage = "Client #" + std::to_string(client.id) + " - " + receivedMessage;
+
+							//// On pr�fixe la taille du message avant celui-ci
+							//std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + receivedMessage.size());
+
+							//// On s�rialise l'entier 16bits
+							//std::uint16_t size = htons(receivedMessage.size());
+							//std::memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+
+							//// On �crit la chaine de caract�re
+							//std::memcpy(&sendBuffer[sizeof(std::uint16_t)], receivedMessage.data(), receivedMessage.size());
+
+							//std::cout << receivedMessage << std::endl;
+							//for (Client& c : clients)
+							//{
+							//	if (c.socket == client.socket) continue;
+
+							//	SendData(c.socket, sendBuffer.data(), sendBuffer.size());
+							//}
+#pragma endregion
 						}
 					}
 				}

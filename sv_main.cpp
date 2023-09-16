@@ -22,6 +22,7 @@ Squelette d'un serveur de Snake
 // (en C++ avant d'appeler une fonction il faut dire au compilateur qu'elle existe, quitte à la d�finir apr�s)
 int server(SOCKET sock);
 void tick();
+std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected);
 
 int main()
 {
@@ -187,18 +188,7 @@ int server(SOCKET sock)
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
-					//size
-					//opcode connection
-					//id du client
-					//bool true = connected / false == disconnected
-					uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
-					std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
-					size = htons(size);
-
-					memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-					sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
-					memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &client.id , sizeof(std::uint8_t));
-					sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01;
+					std::vector<std::uint8_t> sendBuffer = SerializeConnection(client.id, true);
 
 					for (Client& c : clients)
 					{
@@ -232,6 +222,16 @@ int server(SOCKET sock)
 							std::cout << "client #" << client.id << " disconnected" << std::endl;
 
 						// Ici aussi nous pourrions envoyer un message à tous les clients pour notifier la d�connexion d'un client
+
+
+						std::vector<std::uint8_t> sendBuffer = SerializeConnection(client.id, false);
+
+						for (Client& c : clients)
+						{
+							if (c.socket == client.socket) continue;
+
+							SendData(c.socket, sendBuffer.data(), sendBuffer.size());
+						}
 
 						// On oublie pas de fermer la socket avant de supprimer le client de la liste
 						closesocket(client.socket);
@@ -312,4 +312,23 @@ int server(SOCKET sock)
 void tick()
 {
 
+}
+
+
+std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
+{
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
+
+	if (connected)
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01; //  <---- potential d'optimiser
+	else
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x0;
+
+	return sendBuffer;
 }

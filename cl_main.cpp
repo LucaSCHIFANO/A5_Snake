@@ -75,7 +75,7 @@ void ConnectionToServer(SOCKET sock)
 void game(SOCKET sock)
 {
 
-	std::vector<Snake> enemySnakes;
+	std::map<int, Snake> enemySnakes;
 
 	//Loop recv
 	bool running = true;
@@ -125,19 +125,13 @@ void game(SOCKET sock)
 
 					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
 					{
-						std::vector<Snake>::iterator it;
-						for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
-						{
-							if (it->GetId() == (int)receivedMessage[0]) {
-								enemySnakes.erase(it);
-								break;
-							}
-						}
+						enemySnakes.erase((int)receivedMessage[0]);
+						
 					}
 					else  //1 => create new player with snake
 					{
 						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
-						enemySnakes.push_back(clientSnake);
+						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
 					}
 					
 
@@ -148,6 +142,8 @@ void game(SOCKET sock)
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
+					
+					
 					break;
 				case OpcodeApple:
 					break;
@@ -308,9 +304,10 @@ void game(SOCKET sock)
 
 		// On affiche le serpent
 		snake.Draw(window, resources);
-		for (size_t i = 0; i < enemySnakes.size(); i++)
+		auto it = enemySnakes.begin();
+		for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
 		{
-			enemySnakes[i].Draw(window, resources);
+			it->second.Draw(window, resources);
 		}
 
 		// On actualise l'affichage de la fen�tre

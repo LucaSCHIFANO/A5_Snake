@@ -267,11 +267,11 @@ int server(SOCKET sock)
 							std::memcpy(&opcode, &client.pendingData[sizeof(messageSize)], sizeof(uint8_t));
 							Opcode code = (Opcode)opcode;
 
-							std::vector<std::uint8_t> receivedMessage(messageSize);
+							std::vector<std::int8_t> receivedMessage(messageSize);
 
 							if (code == OpcodeSnake) {
 
-								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(int8_t)], messageSize - sizeof(int8_t));
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);

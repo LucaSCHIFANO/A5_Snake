@@ -104,29 +104,31 @@ void game(SOCKET sock)
 					break;
 
 				// On copie le contenu du message
-				std::string receivedMessage(messageSize, ' ');
+				//switch(OPcode)
+				std::vector<std::uint8_t> receivedMessage(messageSize);
+
 				std::memcpy(receivedMessage.data(), &pendingData[sizeof(messageSize)], messageSize);
 
 				// On retire la taille que nous de traiter des donnees en attente
 				std::size_t handledSize = sizeof(messageSize) + messageSize;
 				pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-				std::cout << "-> " << receivedMessage << std::endl;
+				std::cout << "-> " << receivedMessage.data() << std::endl;
 			}
 		}
 	});
 
-	std::string  ipAdress = "127.0.0.1";
+	//std::string ipAdress = "127.0.0.1";
 
-	//Send Message
-	std::vector<std::uint8_t> bytesMessage(sizeof(std::uint16_t) + ipAdress.size() * sizeof(char));
+	////Send Message
+	//std::vector<std::uint8_t> bytesMessage(sizeof(std::uint16_t) + ipAdress.size() * sizeof(char));
 
-	std::uint16_t messageLength = ipAdress.size();
-	messageLength = htons(messageLength);
-	std::memcpy(&bytesMessage[0], &messageLength, sizeof(std::uint16_t));
+	//std::uint16_t messageLength = ipAdress.size();
+	//messageLength = htons(messageLength);
+	//std::memcpy(&bytesMessage[0], &messageLength, sizeof(std::uint16_t));
 
-	std::memcpy(&bytesMessage[sizeof(std::uint16_t)], ipAdress.data(), ipAdress.size());
+	//std::memcpy(&bytesMessage[sizeof(std::uint16_t)], ipAdress.data(), ipAdress.size());
 
-	SendData(sock, (char*)bytesMessage.data(), bytesMessage.size());
+	//SendData(sock, (char*)bytesMessage.data(), bytesMessage.size());
 
 
 

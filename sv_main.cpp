@@ -186,6 +186,27 @@ int server(SOCKET sock)
 					std::cout << "client #" << client.id << " connected from " << strAddr << std::endl;
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
+
+					//size
+					//opcode connection
+					//id du client
+					//bool true = connected / false == disconnected
+					uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(bool);
+					std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
+					size = htonl(size);
+
+					memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+					sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
+					memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &client.id , sizeof(std::uint8_t));
+					sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 1;
+
+					for (Client& c : clients)
+					{
+						//if (c.socket == client.socket) continue;
+
+						SendData(c.socket, sendBuffer.data(), sendBuffer.size());
+					}
+
 				}
 				else
 				{
@@ -262,9 +283,8 @@ int server(SOCKET sock)
 							std::cout << receivedMessage << std::endl;
 							for (Client& c : clients)
 							{
-								//if (c.socket == client.socket) continue;
+								if (c.socket == client.socket) continue;
 
-								//SendData(c.socket, receivedMessage.data(), receivedMessage.size());
 								SendData(c.socket, sendBuffer.data(), sendBuffer.size());
 							}
 						}

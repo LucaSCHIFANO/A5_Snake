@@ -33,3 +33,11 @@ void SendData(SOCKET sock, const void* data, std::size_t dataLength)
         throw std::runtime_error("failed to send data");
     }
 }
+
+
+enum Opcode
+{
+	OpcodeConnection = 0,
+	OpcodeSnake = 1,
+	OpcodeApple = 2
+};

@@ -11,7 +11,7 @@
 class Snake
 {
 public:
-	Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color);
+	Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id);
 
 	// Fait avancer le serpent dans la direction suivie
 	void Advance();
@@ -47,7 +47,11 @@ public:
 	// on ajoute un petit booléen pour savoir s'il faut tester la tête ou non
 	bool TestCollision(const sf::Vector2i& position, bool testHead);
 
+	int GetId();
+	void SetId(int i);
+
 private:
+	int clientId;
 	sf::Color m_color;
 	sf::Vector2i m_followingDir;
 	std::vector<sf::Vector2i> m_body; //< doit au moins avoir trois éléments quoiqu'il arrive

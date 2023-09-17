@@ -362,11 +362,11 @@ void game(SOCKET sock, std::string name)
 		grid.Draw(window, resources);
 
 		// On affiche le serpent
-		snake.Draw(window, resources, font);
+		snake.Draw(window, resources, font, sf::Color::Black);
 		auto it = enemySnakes.begin();
 		for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
 		{
-			it->second.Draw(window, resources, font);
+			it->second.Draw(window, resources, font, sf::Color::Red);
 		}
 
 		// On actualise l'affichage de la fen�tre

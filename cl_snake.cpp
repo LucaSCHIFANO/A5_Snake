@@ -91,7 +91,7 @@ void Snake::Advance(sf::Vector2i position)
 	m_body[0] = position;
 }
 
-void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font) const
+void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font, sf::Color color) const
 {
 	for (std::size_t i = 0; i < m_body.size(); ++i)
 	{
@@ -139,8 +139,8 @@ void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font 
 	text.setString(m_snakeName);
 	text.setFont(font);
 	text.setCharacterSize(20);
-	text.setFillColor(sf::Color::Black);
-	text.setPosition(GetHeadPosition().x * cellSize, GetHeadPosition().y * cellSize - cellSize / 2);
+	text.setFillColor(color);
+	text.setPosition(GetHeadPosition().x * cellSize - (text.getCharacterSize()/2) * (text.getString().getSize()/2), GetHeadPosition().y * cellSize - cellSize * 1.25);
 
 	renderTarget.draw(text);
 }

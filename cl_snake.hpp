@@ -21,7 +21,7 @@ public:
 	void Advance(sf::Vector2i position);
 	
 	// Gère l'affichage du serpent (ainsi que l'orientation des sprites qui le composent en fonction de la direction de chaque partie du corps)
-	void Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font) const;
+	void Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font, sf::Color color) const;
 	
 	// Retourne la liste des positions occupées par le serpent
 	const std::vector<sf::Vector2i>& GetBody() const;

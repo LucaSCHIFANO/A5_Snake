@@ -22,7 +22,6 @@ Squelette d'un serveur de Snake
 // (en C++ avant d'appeler une fonction il faut dire au compilateur qu'elle existe, quitte à la d�finir apr�s)
 int server(SOCKET sock);
 void tick();
-std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected);
 
 int main()
 {
@@ -189,7 +188,6 @@ int server(SOCKET sock)
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
 					std::vector<std::uint8_t> sendBuffer = SerializeConnection(client.id, true);
-					std::vector<std::uint8_t> receiveBuffer = SerializeConnection(client.id, true);
 
 					for (Client& c : clients)
 					{
@@ -197,9 +195,6 @@ int server(SOCKET sock)
 							continue;
 
 						SendData(c.socket, sendBuffer.data(), sendBuffer.size()); //inform other of new client
-
-						receiveBuffer = SerializeConnection(c.id, true);
-						SendData(client.socket, receiveBuffer.data(), receiveBuffer.size()); //inform new client of others
 					}
 
 				}
@@ -330,6 +325,25 @@ int server(SOCKET sock)
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
 								}
 							}
+							if (code == OpcodeSnakeBody) {
+
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+								uint8_t toClientId = (int)receivedMessage[0];
+								// On retire la taille que nous de traiter des donnees en attente
+
+								std::vector<std::uint8_t> body(messageSize - sizeof(uint8_t));
+								std::memcpy(&body[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+								std::vector<std::uint8_t> messageToSend = SerializeSnakeBodyToClient(toClientId, body);
+
+								for (Client& c : clients)
+								{
+									if (c.id != toClientId) continue;
+
+									SendData(c.socket, messageToSend.data(), messageToSend.size());
+								}
+								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+							}
 
 #pragma region MyRegion
 
@@ -387,20 +401,3 @@ void tick()
 }
 
 
-std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
-{
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
-	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
-	size = htons(size);
-
-	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-	sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
-
-	if (connected)
-		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01; //  <---- potential d'optimiser
-	else
-		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x0;
-
-	return sendBuffer;
-}

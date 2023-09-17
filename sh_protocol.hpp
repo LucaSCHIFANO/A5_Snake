@@ -43,8 +43,63 @@ enum Opcode
 	OpcodeSnakePosition = 1,
 	OpcodeApple = 2,
 	OpcodeSnakeDeath = 3,
-	OpcodeEat = 4
+	OpcodeEat = 4,
+	OpcodeSnakeBody = 5
 };
+
+
+std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
+{
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
+
+	if (connected)
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01; //  <---- potential d'optimiser
+	else
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x0;
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeSnakeBodyToServer(int toClientId, const std::vector<sf::Vector2i>& body)
+{
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size();
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); 
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakeBody;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &toClientId, sizeof(std::uint8_t));
+
+	uint8_t currentSize = sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	for (size_t i = 0; i < body.size(); i++)
+	{
+		memcpy(&sendBuffer[size], &body[i].x, body.size());
+		memcpy(&sendBuffer[size + sizeof(std::uint8_t)], &body[i].y, body.size());
+		size += sizeof(std::uint16_t);
+	}
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeSnakeBodyToClient(int clientId, const std::vector<uint8_t>& body)
+{
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size();
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); 
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakeBody;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &body, sizeof(std::uint8_t));
+
+	return sendBuffer;
+}
 
 std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
 {

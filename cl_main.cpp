@@ -75,6 +75,13 @@ void ConnectionToServer(SOCKET sock)
 void game(SOCKET sock)
 {
 
+
+	// On déclare le serpent du joueur qu'on fait apparaitre au milieu de la grille, pointant vers la droite
+	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
+	// Ces valeurs doivent toujours �tre à 1 ou -1 et la valeur de l'autre axe doit �tre à z�ro (nos serpents ne peuvent pas se d�placer
+	// en diagonale)
+	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0);
+
 	std::map<int, Snake> enemySnakes;
 
 	// On déclare la grille des �l�ments statiques (murs, pommes)
@@ -126,16 +133,19 @@ void game(SOCKET sock)
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 
+					int id = (int)receivedMessage[0];
 					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
 					{
-						enemySnakes.erase((int)receivedMessage[0]);
-						std::cout << "Snake#" << (int)receivedMessage[0] << " left the game..." << std::endl;
+						enemySnakes.erase(id);
+						std::cout << "Snake#" << id << " left the game..." << std::endl;
 					}
 					else  //1 => create new player with snake
 					{
-						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
-						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
-						std::cout << "A new foe has appared! Snake#" << (int)receivedMessage[0] << " join the battle!" << std::endl;
+						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, id);
+						enemySnakes.emplace(id, clientSnake);
+						std::cout << "A new foe has appared! Snake#" << id << " join the battle!" << std::endl;
+						std::vector<std::uint8_t> snakeBody = SerializeSnakeBodyToServer(id, snake.GetBody());
+						SendData(sock, snakeBody.data(), snakeBody.size());
 					}
 
 				}
@@ -185,6 +195,23 @@ void game(SOCKET sock)
 
 
 				}
+				else if (code == OpcodeSnakeBody) {
+					std::vector<std::int8_t> receivedMessage(messageSize);
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					int id = (int)receivedMessage[0];
+					std::vector<sf::Vector2i> body;
+					int currentIndex = 0;
+					for (size_t i = 0; i < messageSize - sizeof(uint8_t); i++)
+					{
+						body.push_back(sf::Vector2i(receivedMessage[currentIndex], receivedMessage[currentIndex + 1]));
+						currentIndex += 2;
+						i++;
+					}
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					enemySnakes[(int)receivedMessage[0]].SetBody(body);
+
+				}
 			}
 		}
 	});
@@ -206,12 +233,6 @@ void game(SOCKET sock)
 	window.setView(sf::View(viewCenter, viewSize));
 
 	
-
-	// On déclare le serpent du joueur qu'on fait apparaitre au milieu de la grille, pointant vers la droite
-	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
-	// Ces valeurs doivent toujours �tre à 1 ou -1 et la valeur de l'autre axe doit �tre à z�ro (nos serpents ne peuvent pas se d�placer
-	// en diagonale)
-	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0);
 	
 	// On déclare quelques petits outils pour g�rer le temps
 	sf::Clock clock;

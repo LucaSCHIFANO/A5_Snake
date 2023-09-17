@@ -138,15 +138,28 @@ void game(SOCKET sock)
 					}
 
 				}
-				else if (code == OpcodeSnake)
+				if (code == OpcodeSnakePosition)
 				{
-					std::vector<std::int8_t> receivedMessage(messageSize);
+					std::vector<std::uint8_t> receivedMessage(messageSize);
 
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
+
+					enemySnakes[(int)receivedMessage[0]].Advance(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
+
+				}
+				if (code == OpcodeSnakeDeath)
+				{
+					std::vector<std::uint8_t> receivedMessage(messageSize);
+
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					// On retire la taille que nous de traiter des donnees en attente
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					std::cout << "-> Client#" << (int)receivedMessage[0] << " died : " << std::endl;
 					
 
 					enemySnakes[(int)receivedMessage[0]].SetFollowingDirection(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
@@ -160,6 +173,8 @@ void game(SOCKET sock)
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::Apple);
+					enemySnakes[(int)receivedMessage[0]].Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+
 				}
 			}
 		}
@@ -333,14 +348,14 @@ void game(SOCKET sock)
 void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnakes)
 {
 	snake.Advance();
-	std::vector<std::uint8_t> sendSnakeBuffer = SerializeSnakeToServer(snake.GetFollowingDirection());
+	std::vector<std::uint8_t> sendSnakeBuffer = SerializeSnakeToServer(snake.GetHeadPosition());
 	SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
 	
-	auto it = enemySnakes.begin();
+	/*auto it = enemySnakes.begin();
 	for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
 	{
 		it->second.Advance();
-	}
+	}*/
 
 	// On teste la collision de la t�te du serpent avec la grille
 	sf::Vector2i headPos = snake.GetHeadPosition();
@@ -358,6 +373,8 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		{
 			// Le serpent s'est pris un mur, on le fait r�apparaitre
 			snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+			std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 			break;
 		}
 
@@ -370,5 +387,7 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 	{
 		// Le serpent s'est tu� tout seul, on le fait r�apparaitre
 		snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+		std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+		SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 	}
 }

@@ -95,6 +95,7 @@ int server(SOCKET sock)
 		SOCKET socket;
 		unsigned int id;
 		std::vector<std::uint8_t> pendingData;
+		std::string name;
 	};
 
 	std::vector<Client> clients;
@@ -179,6 +180,7 @@ int server(SOCKET sock)
 					auto& client = clients.emplace_back();
 					client.id = nextClientId++;
 					client.socket = newClient;
+					client.name = "";
 
 					// Représente une adresse IP (celle du client venant de se connecter) sous forme textuelle
 					char strAddr[INET_ADDRSTRLEN];
@@ -300,7 +302,7 @@ int server(SOCKET sock)
 								}
 							}
 
-							if (code == OpcodeApple) {
+							else if (code == OpcodeApple) {
 
 								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
@@ -315,7 +317,7 @@ int server(SOCKET sock)
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
 								}
 							}
-							if (code == OpcodeEat) {
+							else if (code == OpcodeEat) {
 
 								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
@@ -330,7 +332,26 @@ int server(SOCKET sock)
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
 								}
 							}
+							else if (code == OpcodeChangeName) {
 
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+								client.name = (char*)receivedMessage.data();
+
+								std::vector<std::uint8_t> messageToSend = SerializeNameToClient((char*)receivedMessage.data(), client.id);
+								std::vector<std::uint8_t> messageToReceive = SerializeNameToClient((char*)receivedMessage.data(), client.id);
+
+								for (Client& c : clients)
+								{
+									if (c.socket == client.socket) continue;
+
+									SendData(c.socket, messageToSend.data(), messageToSend.size());
+
+									messageToReceive = SerializeNameToClient(c.name, c.id);
+									SendData(client.socket, messageToReceive.data(), messageToReceive.size());
+									std::cout << "hello";
+								}
+							}
 #pragma region MyRegion
 
 

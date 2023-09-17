@@ -11,7 +11,7 @@ const int windowWidth = cellSize * gridWidth;
 const int windowHeight = cellSize * gridHeight;
 
 void ConnectionToServer(SOCKET sock);
-void game(SOCKET sock);
+void game(SOCKET sock, std::string name);
 void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnakes);
 
 int main()
@@ -40,8 +40,22 @@ int main()
 		return EXIT_FAILURE;
 	}
 	*/
+
+
+	//Input Name
+	std::cout << "Input your snake name : ";
+	std::string snakeName;
+	std::getline(std::cin, snakeName);
+
+	//message -> "127.0.0.1"
+	if (snakeName.empty())
+	{
+		shutdown(sock, SD_BOTH);
+		return 0;
+	}
+
 	ConnectionToServer(sock);
-	game(sock);
+	game(sock, snakeName);
 }
 
 void ConnectionToServer(SOCKET sock) 
@@ -72,10 +86,17 @@ void ConnectionToServer(SOCKET sock)
 	else std::cout << "\nConnected to server ! \n" << std::endl;	
 }
 
-void game(SOCKET sock)
+void game(SOCKET sock, std::string name)
 {
-
+	sf::Font font;
+	if (!font.loadFromFile("assets/SuperBoys.ttf"))
+	{
+		return;
+	}
 	std::map<int, Snake> enemySnakes;
+
+	std::vector<std::uint8_t> sendNameBuffer = SerializeNameToServer(name);
+	SendData(sock, sendNameBuffer.data(), sendNameBuffer.size());
 
 	// On déclare la grille des �l�ments statiques (murs, pommes)
 	// Les �l�ments statiques sont ceux qui �voluent tr�s peu dans le jeu, comparativement aux serpents qui �voluent à chaque
@@ -133,13 +154,13 @@ void game(SOCKET sock)
 					}
 					else  //1 => create new player with snake
 					{
-						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
+						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0], "snake");
 						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
 						std::cout << "A new foe has appared! Snake#" << (int)receivedMessage[0] << " join the battle!" << std::endl;
 					}
 
 				}
-				if (code == OpcodeSnakePosition)
+				else if (code == OpcodeSnakePosition)
 				{
 					std::vector<std::uint8_t> receivedMessage(messageSize);
 
@@ -151,7 +172,7 @@ void game(SOCKET sock)
 					enemySnakes[(int)receivedMessage[0]].Advance(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
 
 				}
-				if (code == OpcodeSnakeDeath)
+				else if (code == OpcodeSnakeDeath)
 				{
 					std::vector<std::uint8_t> receivedMessage(messageSize);
 
@@ -185,6 +206,22 @@ void game(SOCKET sock)
 
 
 				}
+				else if (code == OpcodeChangeName)
+				{
+					std::vector<std::int8_t> receivedMessage(messageSize);
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+					
+					int size = messageSize - sizeof(uint8_t) - sizeof(uint8_t);
+					std::string buffer(size, ' ');
+					std::memcpy(&buffer[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t) + sizeof(uint8_t)], size);
+
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+
+					enemySnakes[(int)receivedMessage[0]].ChangeName(buffer);
+
+
+				}
+
 			}
 		}
 	});
@@ -211,7 +248,7 @@ void game(SOCKET sock)
 	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
 	// Ces valeurs doivent toujours �tre à 1 ou -1 et la valeur de l'autre axe doit �tre à z�ro (nos serpents ne peuvent pas se d�placer
 	// en diagonale)
-	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0);
+	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0, name);
 	
 	// On déclare quelques petits outils pour g�rer le temps
 	sf::Clock clock;
@@ -325,11 +362,11 @@ void game(SOCKET sock)
 		grid.Draw(window, resources);
 
 		// On affiche le serpent
-		snake.Draw(window, resources);
+		snake.Draw(window, resources, font);
 		auto it = enemySnakes.begin();
 		for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
 		{
-			it->second.Draw(window, resources);
+			it->second.Draw(window, resources, font);
 		}
 
 		// On actualise l'affichage de la fen�tre
@@ -398,12 +435,4 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 		}
 	}
-
-	//if (snake.TestCollision(headPos, false))
-	//{
-	//	// Le serpent s'est tu� tout seul, on le fait r�apparaitre
-	//	snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
-	//	std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
-	//	SendData(sock, SnakeDeath.data(), SnakeDeath.size());
-	//}
 }

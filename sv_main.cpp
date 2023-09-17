@@ -208,7 +208,7 @@ int server(SOCKET sock)
 					// On rajoute les pommes au join d'un nouveau joueur
 					for (int i = 0; i < appleStorage.size(); i++)
 					{
-						std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
+						//std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
 						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
 						SendData(client.socket, messageToSend.data(), messageToSend.size());
 					}
@@ -393,7 +393,6 @@ int server(SOCKET sock)
 
 									messageToReceive = SerializeNameToClient(c.name, c.id);
 									SendData(client.socket, messageToReceive.data(), messageToReceive.size());
-									std::cout << "hello";
 								}
 							}
 							if (code == OpcodeSnakeBody) {
@@ -402,10 +401,19 @@ int server(SOCKET sock)
 								uint8_t toClientId = (int)receivedMessage[0];
 								// On retire la taille que nous de traiter des donnees en attente
 
+								std::vector<sf::Vector2i> _body;
+
+								for (size_t i = 1; i < (int)messageSize - sizeof(uint8_t); i++)
+								{
+									std::cout << "x : " << (int)receivedMessage[i] << ", y : " << (int)receivedMessage[i + 1] << std::endl;
+									_body.push_back(sf::Vector2i((int)receivedMessage[i], (int)receivedMessage[i + 1]));
+									i++;
+
+								}
+
 								std::vector<std::uint8_t> body(messageSize - sizeof(uint8_t));
 								std::memcpy(&body[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
-
-								std::vector<std::uint8_t> messageToSend = SerializeSnakeBodyToClient(client.id, body);
+								std::vector<std::uint8_t> messageToSend = SerializeSnakeBodyToClient(client.id, _body);
 
 								for (Client& c : clients)
 								{
@@ -415,34 +423,6 @@ int server(SOCKET sock)
 								}
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 							}
-#pragma region MyRegion
-
-
-							//client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
-
-							//// -- Gestion du message --
-
-							//// Pr�fixons le message d'un "Client #X - " pour identifier le client
-							//receivedMessage = "Client #" + std::to_string(client.id) + " - " + receivedMessage;
-
-							//// On pr�fixe la taille du message avant celui-ci
-							//std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + receivedMessage.size());
-
-							//// On s�rialise l'entier 16bits
-							//std::uint16_t size = htons(receivedMessage.size());
-							//std::memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-
-							//// On �crit la chaine de caract�re
-							//std::memcpy(&sendBuffer[sizeof(std::uint16_t)], receivedMessage.data(), receivedMessage.size());
-
-							//std::cout << receivedMessage << std::endl;
-							//for (Client& c : clients)
-							//{
-							//	if (c.socket == client.socket) continue;
-
-							//	SendData(c.socket, sendBuffer.data(), sendBuffer.size());
-							//}
-#pragma endregion
 						}
 					}
 				}

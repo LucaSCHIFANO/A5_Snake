@@ -140,7 +140,9 @@ void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font 
 	text.setFont(font);
 	text.setCharacterSize(20);
 	text.setFillColor(color);
-	text.setPosition(GetHeadPosition().x * cellSize - (text.getCharacterSize()/2) * (text.getString().getSize()/2), GetHeadPosition().y * cellSize - cellSize * 1.25);
+	
+	text.setPosition(GetHeadPosition().x * cellSize - text.getGlobalBounds().getSize().x/2, GetHeadPosition().y * cellSize - cellSize * 1.25);
+	//text.setPosition(GetHeadPosition().x * cellSize - (text.getCharacterSize()/2) * (text.getString().getSize()/2), GetHeadPosition().y * cellSize - cellSize * 1.25);
 
 	renderTarget.draw(text);
 }

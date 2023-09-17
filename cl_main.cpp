@@ -238,12 +238,13 @@ void game(SOCKET sock, std::string name)
 
 					int id = (int)receivedMessage[0];
 					std::vector<sf::Vector2i> body;
-					int currentIndex = 0;
-					for (size_t i = 0; i < messageSize - sizeof(uint8_t); i++)
+
+					for (size_t i = 1; i < messageSize - sizeof(uint8_t); i++)
 					{
-						body.push_back(sf::Vector2i((int)receivedMessage[currentIndex], (int)receivedMessage[currentIndex + 1]));
-						currentIndex += 2;
-						i++;
+						std::cout << "x: " << (int)receivedMessage[i] << ", y :" << (int)receivedMessage[i + 1] << std::endl;
+						body.push_back(sf::Vector2i((int)receivedMessage[i], (int)receivedMessage[i + 1]));
+						i ++;
+
 					}
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					enemySnakes[(int)receivedMessage[0]].SetBody(body);

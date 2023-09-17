@@ -296,7 +296,7 @@ int server(SOCKET sock)
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
-								std::vector<std::uint8_t> messageToSend = SerializeSnakeToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
 								for (Client& c : clients)
 								{

@@ -77,6 +77,11 @@ void game(SOCKET sock)
 
 	std::map<int, Snake> enemySnakes;
 
+	// On déclare la grille des �l�ments statiques (murs, pommes)
+	// Les �l�ments statiques sont ceux qui �voluent tr�s peu dans le jeu, comparativement aux serpents qui �voluent à chaque
+	// tour de jeu ("tick")
+	Grid grid(gridWidth, gridHeight);
+
 	//Loop recv
 	bool running = true;
 	std::thread readThread([&]()
@@ -142,19 +147,19 @@ void game(SOCKET sock)
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
-					break;
-				case OpcodeApple:
+					
+
+					enemySnakes[(int)receivedMessage[0]].SetFollowingDirection(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
+				}
+				else if (code == OpcodeApple)
+				{
+					std::vector<std::int8_t> receivedMessage(messageSize);
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
-					break;
-				default:
-					break;
-
-					enemySnakes[(int)receivedMessage[0]].SetFollowingDirection(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
-
+					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::Apple);
 				}
 			}
 		}
@@ -193,10 +198,7 @@ void game(SOCKET sock)
 	sf::Vector2f viewCenter = viewSize / 2.f - sf::Vector2f(cellSize, cellSize) / 2.f;
 	window.setView(sf::View(viewCenter, viewSize));
 
-	// On déclare la grille des �l�ments statiques (murs, pommes)
-	// Les �l�ments statiques sont ceux qui �voluent tr�s peu dans le jeu, comparativement aux serpents qui �voluent à chaque
-	// tour de jeu ("tick")
-	Grid grid(gridWidth, gridHeight);
+	
 
 	// On déclare le serpent du joueur qu'on fait apparaitre au milieu de la grille, pointant vers la droite
 	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
@@ -298,15 +300,11 @@ void game(SOCKET sock)
 				grid.SetCell(x, y, CellType::Apple);
 
 				sf::Vector2i sendPommePos (x, y);
-				/*sendPommePos <<= 16;
-				sendPommePos |= y;*/
-				//sendPommePos = ntohl(sendPommePos);
 
 				std::vector<std::uint8_t> sendSnakeBuffer = SerializeAppleToServer(sendPommePos);
 
 				SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
 
-				//SendData(sock, &sendPommePos, sizeof(std::uint32_t));
 
 				// On pr�voit la prochaine apparition de pomme
 				nextApple += appleInterval;

@@ -69,7 +69,7 @@ std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
 
 std::vector<std::uint8_t> SerializeSnakeBodyToServer(int toClientId, const std::vector<sf::Vector2i>& body)
 {
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size();
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size() * sizeof(uint16_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); 
 	size = htons(size);
 
@@ -80,9 +80,9 @@ std::vector<std::uint8_t> SerializeSnakeBodyToServer(int toClientId, const std::
 	uint8_t currentSize = sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
 	for (size_t i = 0; i < body.size(); i++)
 	{
-		memcpy(&sendBuffer[size], &body[i].x, body.size());
-		memcpy(&sendBuffer[size + sizeof(std::uint8_t)], &body[i].y, body.size());
-		size += sizeof(std::uint16_t);
+		memcpy(&sendBuffer[currentSize], &body[i].x, sizeof(std::uint8_t));
+		memcpy(&sendBuffer[currentSize + sizeof(std::uint8_t)], &body[i].y, sizeof(std::uint8_t));
+		currentSize += sizeof(std::uint16_t);
 	}
 
 	return sendBuffer;

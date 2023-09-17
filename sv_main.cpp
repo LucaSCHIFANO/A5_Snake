@@ -405,7 +405,7 @@ int server(SOCKET sock)
 								std::vector<std::uint8_t> body(messageSize - sizeof(uint8_t));
 								std::memcpy(&body[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
-								std::vector<std::uint8_t> messageToSend = SerializeSnakeBodyToClient(toClientId, body);
+								std::vector<std::uint8_t> messageToSend = SerializeSnakeBodyToClient(client.id, body);
 
 								for (Client& c : clients)
 								{

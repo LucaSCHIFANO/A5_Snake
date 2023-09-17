@@ -241,7 +241,7 @@ void game(SOCKET sock, std::string name)
 					int currentIndex = 0;
 					for (size_t i = 0; i < messageSize - sizeof(uint8_t); i++)
 					{
-						body.push_back(sf::Vector2i(receivedMessage[currentIndex], receivedMessage[currentIndex + 1]));
+						body.push_back(sf::Vector2i((int)receivedMessage[currentIndex], (int)receivedMessage[currentIndex + 1]));
 						currentIndex += 2;
 						i++;
 					}

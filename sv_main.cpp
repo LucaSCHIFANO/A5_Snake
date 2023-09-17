@@ -469,22 +469,3 @@ void tick()
 {
 
 }
-
-
-std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
-{
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
-	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
-	size = htons(size);
-
-	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-	sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
-
-	if (connected)
-		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01; //  <---- potential d'optimiser
-	else
-		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x0;
-
-	return sendBuffer;
-}

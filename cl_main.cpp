@@ -99,7 +99,7 @@ void game(SOCKET sock, std::string name)
 	// Note : les directions du serpent sont repr�sent�es par le d�calage en X ou en Y n�cessaire pour passer à la case suivante.
 	// Ces valeurs doivent toujours �tre à 1 ou -1 et la valeur de l'autre axe doit �tre à z�ro (nos serpents ne peuvent pas se d�placer
 	// en diagonale)
-	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0);
+	Snake snake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Green, 0, name);
 
 	std::map<int, Snake> enemySnakes;
 
@@ -163,7 +163,7 @@ void game(SOCKET sock, std::string name)
 					}
 					else  //1 => create new player with snake
 					{
-						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, id);
+						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, id,"Snake");
 						enemySnakes.emplace(id, clientSnake);
 						std::cout << "A new foe has appared! Snake#" << id << " join the battle!" << std::endl;
 						std::vector<std::uint8_t> snakeBody = SerializeSnakeBodyToServer(id, snake.GetBody());
@@ -232,9 +232,6 @@ void game(SOCKET sock, std::string name)
 
 
 				}
-
-			}
-		}
 				else if (code == OpcodeSnakeBody) {
 					std::vector<std::int8_t> receivedMessage(messageSize);
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));

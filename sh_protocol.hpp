@@ -44,7 +44,8 @@ enum Opcode
 	OpcodeApple = 2,
 	OpcodeSnakeDeath = 3,
 	OpcodeEat = 4,
-	OpcodeChangeName = 5
+	OpcodeChangeName = 5, 
+	OpcodeSnakeBody = 6 
 };
 
 
@@ -87,7 +88,7 @@ std::vector<std::uint8_t> SerializeSnakeBodyToServer(int toClientId, const std::
 	return sendBuffer;
 }
 
-std::vector<std::uint8_t> SerializeSnakeBodyToClient(int clientId, const std::vector<uint8_t>& body)
+std::vector<std::uint8_t> SerializeSnakeBodyToClient(int clientId, const std::vector<std::uint8_t>& body)
 {
 	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size();
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); 

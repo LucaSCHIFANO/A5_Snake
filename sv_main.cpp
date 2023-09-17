@@ -267,16 +267,19 @@ int server(SOCKET sock)
 							std::memcpy(&opcode, &client.pendingData[sizeof(messageSize)], sizeof(uint8_t));
 							Opcode code = (Opcode)opcode;
 
-							std::vector<std::uint8_t> receivedMessage(messageSize);
+							std::vector<std::int8_t> receivedMessage(messageSize);
 
 							if (code == OpcodeSnake) {
 
-								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(int8_t)], messageSize - sizeof(int8_t));
 
+								std::cout << "recieved message : " << (int)receivedMessage[0] << " : "<< (int)receivedMessage[1]<< std::endl;
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeSnakeToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 								
+								std::cout << "sent message : " << (int)messageToSend[4] << " : " << (int)messageToSend[5] << std::endl;
+
 								for (Client& c : clients)
 								{
 									if (c.socket == client.socket) continue;

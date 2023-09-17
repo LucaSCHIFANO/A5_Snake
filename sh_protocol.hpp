@@ -50,18 +50,18 @@ std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
 	//int verticale
 	//horizontal
 
-	std::uint8_t horizontal = direction.x;
-	std::uint8_t vertical= direction.y;
+	std::int8_t horizontal = direction.x;
+	std::int8_t vertical= direction.y;
 
 	//Send Message
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::int8_t) + sizeof(std::int8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
 	size = htons(size);
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::int8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::int8_t)], &vertical, sizeof(std::int8_t));
 
 
 	return sendBuffer;
@@ -75,19 +75,19 @@ std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
 	//int verticale
 	//horizontal
 
-	std::uint8_t horizontal = direction.x;
-	std::uint8_t vertical = direction.y;
+	std::int8_t horizontal = direction.x;
+	std::int8_t vertical = direction.y;
 
 	//Send Message
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::int8_t) + sizeof(std::int8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
 	size = htons(size);
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::int8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::int8_t)], &vertical, sizeof(std::int8_t));
 
 
 	return sendBuffer;

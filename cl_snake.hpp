@@ -11,6 +11,7 @@
 class Snake
 {
 public:
+	Snake();
 	Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id);
 
 	// Fait avancer le serpent dans la direction suivie

@@ -129,12 +129,13 @@ void game(SOCKET sock)
 					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
 					{
 						enemySnakes.erase((int)receivedMessage[0]);
-
+						std::cout << "Snake#" << (int)receivedMessage[0] << " left the game..." << std::endl;
 					}
 					else  //1 => create new player with snake
 					{
 						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
 						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
+						std::cout << "A new foe has appared! Snake#" << (int)receivedMessage[0] << " join the battle!" << std::endl;
 					}
 
 				}
@@ -146,7 +147,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 
 					enemySnakes[(int)receivedMessage[0]].Advance(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
 
@@ -159,7 +159,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "-> Client#" << (int)receivedMessage[0] << " died : " << std::endl;
 				
 					enemySnakes[(int)receivedMessage[0]].Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
 				}
@@ -170,7 +169,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::Apple);
 					
 
@@ -182,7 +180,7 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
+					enemySnakes[(int)receivedMessage[0]].Grow();
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::None);
 
 
@@ -190,23 +188,6 @@ void game(SOCKET sock)
 			}
 		}
 	});
-
-	//std::string ipAdress = "127.0.0.1";
-
-	////Send Message
-	//std::vector<std::uint8_t> bytesMessage(sizeof(std::uint16_t) + ipAdress.size() * sizeof(char));
-
-	//std::uint16_t messageLength = ipAdress.size();
-	//messageLength = htons(messageLength);
-	//std::memcpy(&bytesMessage[0], &messageLength, sizeof(std::uint16_t));
-
-	//std::memcpy(&bytesMessage[sizeof(std::uint16_t)], ipAdress.data(), ipAdress.size());
-
-	//SendData(sock, (char*)bytesMessage.data(), bytesMessage.size());
-
-
-
-
 
 
 	// Chargement des assets du jeu
@@ -406,4 +387,23 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
 		SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 	}
+	//On check si on est pas en collision avec un autre serpent
+	for (auto& snakes : enemySnakes) 
+	{
+		if (snakes.second.TestCollision(headPos, false))
+		{
+			// Le serpent s'est tu� tout seul, on le fait r�apparaitre
+			snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+			std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
+		}
+	}
+
+	//if (snake.TestCollision(headPos, false))
+	//{
+	//	// Le serpent s'est tu� tout seul, on le fait r�apparaitre
+	//	snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+	//	std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+	//	SendData(sock, SnakeDeath.data(), SnakeDeath.size());
+	//}
 }

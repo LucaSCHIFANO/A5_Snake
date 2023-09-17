@@ -188,23 +188,6 @@ void game(SOCKET sock)
 		}
 	});
 
-	//std::string ipAdress = "127.0.0.1";
-
-	////Send Message
-	//std::vector<std::uint8_t> bytesMessage(sizeof(std::uint16_t) + ipAdress.size() * sizeof(char));
-
-	//std::uint16_t messageLength = ipAdress.size();
-	//messageLength = htons(messageLength);
-	//std::memcpy(&bytesMessage[0], &messageLength, sizeof(std::uint16_t));
-
-	//std::memcpy(&bytesMessage[sizeof(std::uint16_t)], ipAdress.data(), ipAdress.size());
-
-	//SendData(sock, (char*)bytesMessage.data(), bytesMessage.size());
-
-
-
-
-
 
 	// Chargement des assets du jeu
 	Resources resources;
@@ -386,7 +369,6 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		{
 			// Le serpent s'est pris un mur, on le fait r�apparaitre
 			snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
-			std::cout << snake.GetFollowingDirection().x << " : " << snake.GetFollowingDirection().y << std::endl;
 			std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
 			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 			break;
@@ -404,4 +386,23 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
 		SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 	}
+	//On check si on est pas en collision avec un autre serpent
+	for (auto& snakes : enemySnakes) 
+	{
+		if (snakes.second.TestCollision(headPos, false))
+		{
+			// Le serpent s'est tu� tout seul, on le fait r�apparaitre
+			snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+			std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
+		}
+	}
+
+	//if (snake.TestCollision(headPos, false))
+	//{
+	//	// Le serpent s'est tu� tout seul, on le fait r�apparaitre
+	//	snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+	//	std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
+	//	SendData(sock, SnakeDeath.data(), SnakeDeath.size());
+	//}
 }

@@ -150,6 +150,11 @@ void game(SOCKET sock)
 					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					break;
 				case OpcodeApple:
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					// On retire la taille que nous de traiter des donnees en attente
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					break;
 				default:
 					break;
@@ -294,6 +299,16 @@ void game(SOCKET sock)
 			{
 				grid.SetCell(x, y, CellType::Apple);
 
+				sf::Vector2i sendPommePos (x, y);
+				/*sendPommePos <<= 16;
+				sendPommePos |= y;*/
+				//sendPommePos = ntohl(sendPommePos);
+
+				std::vector<std::uint8_t> sendSnakeBuffer = SerializeAppleToServer(sendPommePos);
+
+				SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
+
+				//SendData(sock, &sendPommePos, sizeof(std::uint32_t));
 
 				// On pr�voit la prochaine apparition de pomme
 				nextApple += appleInterval;

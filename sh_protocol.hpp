@@ -92,3 +92,53 @@ std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
 
 	return sendBuffer;
 }
+
+std::vector<std::uint8_t> SerializeAppleToServer(sf::Vector2i position)
+{
+	//size
+	//opcode
+	//int verticale
+	//horizontal
+
+	std::uint8_t horizontal = position.x;
+	std::uint8_t vertical = position.y;
+
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeApple;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeAppleToClient(sf::Vector2i position, int id)
+{
+	//size
+	//opcode
+	//id
+	//int verticale
+	//horizontal
+
+	std::uint8_t horizontal = position.x;
+	std::uint8_t vertical = position.y;
+
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeApple;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
+
+
+	return sendBuffer;
+}

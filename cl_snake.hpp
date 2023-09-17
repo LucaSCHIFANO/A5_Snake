@@ -3,6 +3,8 @@
 #include "cl_resources.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <vector>
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 // La classe Snake représente un serpent en jeu, ainsi que toutes ses pièces
 // celui-ci possède toujours une taille de trois à l'apparition, et peut grandir,
@@ -12,14 +14,14 @@ class Snake
 {
 public:
 	Snake();
-	Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id);
+	Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id, std::string name);
 
 	// Fait avancer le serpent dans la direction suivie
 	void Advance();
 	void Advance(sf::Vector2i position);
 	
 	// Gère l'affichage du serpent (ainsi que l'orientation des sprites qui le composent en fonction de la direction de chaque partie du corps)
-	void Draw(sf::RenderTarget& renderTarget, Resources& resources) const;
+	void Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font, sf::Color color) const;
 	
 	// Retourne la liste des positions occupées par le serpent
 	const std::vector<sf::Vector2i>& GetBody() const;
@@ -49,6 +51,8 @@ public:
 	// on ajoute un petit booléen pour savoir s'il faut tester la tête ou non
 	bool TestCollision(const sf::Vector2i& position, bool testHead);
 
+	void ChangeName(std::string name);
+
 	int GetId();
 	void SetId(int i);
 
@@ -57,4 +61,5 @@ private:
 	sf::Color m_color;
 	sf::Vector2i m_followingDir;
 	std::vector<sf::Vector2i> m_body; //< doit au moins avoir trois éléments quoiqu'il arrive
+	std::string m_snakeName;
 };

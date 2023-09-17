@@ -8,6 +8,7 @@
 #include <iostream> //< std::cout/std::cerr
 #include <string> //< std::string / std::string_view
 #include <thread> //< std::thread
+#include <vector>
 
 // Sous Windows il faut linker ws2_32.lib (Propriétés du projet => �diteur de lien => Entr�e => D�pendances suppl�mentaires)
 // Ce projet est �galement configur� en C++17 (ce n'est pas n�cessaire à winsock)
@@ -17,6 +18,8 @@
 Squelette d'un serveur de Snake
 //////
 */
+
+using namespace std;
 
 // On d�clare un prototype des fonctions que nous allons d�finir plus tard
 // (en C++ avant d'appeler une fonction il faut dire au compilateur qu'elle existe, quitte à la d�finir apr�s)
@@ -51,7 +54,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int r = server(sock);
+	int r = server(sock);	
 
 	// Comme dans le premier code, on n'oublie pas de fermer les sockets d�s qu'on en a plus besoin
 	closesocket(sock);
@@ -94,6 +97,7 @@ int server(SOCKET sock)
 		SOCKET socket;
 		unsigned int id;
 		std::vector<std::uint8_t> pendingData;
+		std::string name;
 	};
 
 	std::vector<Client> clients;
@@ -104,6 +108,21 @@ int server(SOCKET sock)
 	// Temps entre les ticks (tours de jeu)
 	sf::Time tickInterval = sf::seconds(tickDelay);
 	sf::Time nextTick = clock.getElapsedTime() + tickInterval;
+
+	// On déclare de quoi stoquer les pommes
+	struct appleStock
+	{
+		int positionx;
+		int positiony;
+		appleStock(int x, int y) 
+		{
+			positionx = x;
+			positiony = y;
+		}
+	};
+
+	std::vector<appleStock> appleStorage;
+
 
 	// Boucle infinie pour continuer d'accepter des clients
 	for (;;)
@@ -178,12 +197,21 @@ int server(SOCKET sock)
 					auto& client = clients.emplace_back();
 					client.id = nextClientId++;
 					client.socket = newClient;
+					client.name = "";
 
 					// Représente une adresse IP (celle du client venant de se connecter) sous forme textuelle
 					char strAddr[INET_ADDRSTRLEN];
 					inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, strAddr, INET_ADDRSTRLEN);
 
 					std::cout << "snake#" << client.id << " connected from " << strAddr << std::endl;
+
+					// On rajoute les pommes au join d'un nouveau joueur
+					for (int i = 0; i < appleStorage.size(); i++)
+					{
+						std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
+						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
+						SendData(client.socket, messageToSend.data(), messageToSend.size());
+					}
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
@@ -295,13 +323,16 @@ int server(SOCKET sock)
 								}
 							}
 
-							if (code == OpcodeApple) {
+							else if (code == OpcodeApple) {
 
 								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+
+								appleStorage.push_back(appleStock((int)receivedMessage[0], (int)receivedMessage[1]));
+
 
 								for (Client& c : clients)
 								{
@@ -310,7 +341,7 @@ int server(SOCKET sock)
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
 								}
 							}
-							if (code == OpcodeEat) {
+							else if (code == OpcodeEat) {
 
 								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
 
@@ -318,11 +349,51 @@ int server(SOCKET sock)
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
+								//// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
+								//for (int i = 0; i < appleStorage.size(); i++)
+								//{
+								//	if (appleStorage[i].positionx == (int)receivedMessage[0] && appleStorage[i].positionx == (int)receivedMessage[1])
+								//	{
+								//		appleStorage.erase(appleStorage.begin() + i);
+								//		appleCount--;
+								//	}
+								//}
+
+								auto it = appleStorage.begin();
+								for (it = appleStorage.begin(); it != appleStorage.end(); it++)
+								{
+									if (it->positionx == (int)receivedMessage[0] && it->positionx == (int)receivedMessage[1])
+									{
+										it = appleStorage.erase(it);
+										break;
+									}
+								}
+
 								for (Client& c : clients)
 								{
 									if (c.socket == client.socket) continue;
 
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
+								}
+							}
+							else if (code == OpcodeChangeName) {
+
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+								client.name = (char*)receivedMessage.data();
+
+								std::vector<std::uint8_t> messageToSend = SerializeNameToClient((char*)receivedMessage.data(), client.id);
+								std::vector<std::uint8_t> messageToReceive = SerializeNameToClient((char*)receivedMessage.data(), client.id);
+
+								for (Client& c : clients)
+								{
+									if (c.socket == client.socket) continue;
+
+									SendData(c.socket, messageToSend.data(), messageToSend.size());
+
+									messageToReceive = SerializeNameToClient(c.name, c.id);
+									SendData(client.socket, messageToReceive.data(), messageToReceive.size());
+									std::cout << "hello";
 								}
 							}
 							if (code == OpcodeSnakeBody) {
@@ -344,7 +415,6 @@ int server(SOCKET sock)
 								}
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 							}
-
 #pragma region MyRegion
 
 
@@ -401,3 +471,20 @@ void tick()
 }
 
 
+std::vector<std::uint8_t> SerializeConnection(int clientId, bool connected)
+{
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); // could optimise
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeConnection;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
+
+	if (connected)
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x01; //  <---- potential d'optimiser
+	else
+		sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)] = 0x0;
+
+	return sendBuffer;
+}

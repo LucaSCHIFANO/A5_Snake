@@ -166,6 +166,7 @@ void Snake::Respawn(const sf::Vector2i& spawnPosition, const sf::Vector2i& direc
 	m_body.push_back(spawnPosition);
 	m_body.push_back(spawnPosition - direction);
 	m_body.push_back(spawnPosition - direction * 2);
+	SetFollowingDirection(direction);
 }
 
 void Snake::SetBody(const std::vector<sf::Vector2i>& body)

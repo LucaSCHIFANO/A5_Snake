@@ -146,7 +146,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "-> Client#" << (int)receivedMessage[0] << "'s direction : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 
 					enemySnakes[(int)receivedMessage[0]].Advance(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
 
@@ -159,7 +158,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "-> Client#" << (int)receivedMessage[0] << " died : " << std::endl;
 				
 					enemySnakes[(int)receivedMessage[0]].Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
 				}
@@ -170,7 +168,6 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::Apple);
 					
 
@@ -182,7 +179,7 @@ void game(SOCKET sock)
 
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
+					enemySnakes[(int)receivedMessage[0]].Grow();
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::None);
 
 
@@ -389,6 +386,7 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		{
 			// Le serpent s'est pris un mur, on le fait r�apparaitre
 			snake.Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+			std::cout << snake.GetFollowingDirection().x << " : " << snake.GetFollowingDirection().y << std::endl;
 			std::vector<std::uint8_t> SnakeDeath = SerializeDeathToServer();
 			SendData(sock, SnakeDeath.data(), SnakeDeath.size());
 			break;

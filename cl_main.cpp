@@ -129,12 +129,13 @@ void game(SOCKET sock)
 					if ((int)receivedMessage[1] == 0)  //0 => remove player and snake
 					{
 						enemySnakes.erase((int)receivedMessage[0]);
-
+						std::cout << "Snake#" << (int)receivedMessage[0] << " left the game..." << std::endl;
 					}
 					else  //1 => create new player with snake
 					{
 						Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, (int)receivedMessage[0]);
 						enemySnakes.emplace((int)receivedMessage[0], clientSnake);
+						std::cout << "A new foe has appared! Snake#" << (int)receivedMessage[0] << " join the battle!" << std::endl;
 					}
 
 				}

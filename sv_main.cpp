@@ -171,7 +171,7 @@ int server(SOCKET sock)
 					SOCKET newClient = accept(sock, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrSize);
 					if (newClient == INVALID_SOCKET)
 					{
-						std::cerr << "failed to accept new client (" << WSAGetLastError() << ")\n";
+						std::cerr << "failed to accept new snake (" << WSAGetLastError() << ")\n";
 						return EXIT_FAILURE;
 					}
 
@@ -184,7 +184,7 @@ int server(SOCKET sock)
 					char strAddr[INET_ADDRSTRLEN];
 					inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, strAddr, INET_ADDRSTRLEN);
 
-					std::cout << "client #" << client.id << " connected from " << strAddr << std::endl;
+					std::cout << "snake#" << client.id << " connected from " << strAddr << std::endl;
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
@@ -222,9 +222,9 @@ int server(SOCKET sock)
 						// Une erreur s'est produite ou le nombre d'octets lus est de z�ro, indiquant une d�connexion
 						// on adapte le message en fonction.
 						if (byteRead == SOCKET_ERROR)
-							std::cerr << "failed to read from client #" << client.id << " (" << WSAGetLastError() << "), disconnecting..." << std::endl;
+							std::cerr << "failed to read from snake#" << client.id << " (" << WSAGetLastError() << "), disconnecting..." << std::endl;
 						else
-							std::cout << "client #" << client.id << " disconnected" << std::endl;
+							std::cout << "Snake#" << client.id << " disconnected" << std::endl;
 
 						// Ici aussi nous pourrions envoyer un message à tous les clients pour notifier la d�connexion d'un client
 

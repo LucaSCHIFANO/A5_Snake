@@ -160,9 +160,8 @@ void game(SOCKET sock)
 					// On retire la taille que nous de traiter des donnees en attente
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "-> Client#" << (int)receivedMessage[0] << " died : " << std::endl;
-					
-
-					enemySnakes[(int)receivedMessage[0]].SetFollowingDirection(sf::Vector2i((int)receivedMessage[1], (int)receivedMessage[2]));
+				
+					enemySnakes[(int)receivedMessage[0]].Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
 				}
 				else if (code == OpcodeApple)
 				{
@@ -173,7 +172,19 @@ void game(SOCKET sock)
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
 					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
 					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::Apple);
-					enemySnakes[(int)receivedMessage[0]].Respawn(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0));
+					
+
+				}
+				else if (code == OpcodeEat)
+				{
+					std::vector<std::int8_t> receivedMessage(messageSize);
+					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+					// On retire la taille que nous de traiter des donnees en attente
+					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
+					std::cout << "Position pomme : " << (int)receivedMessage[1] << ", " << (int)receivedMessage[2] << std::endl;
+					grid.SetCell((int)receivedMessage[1], (int)receivedMessage[2], CellType::None);
+
 
 				}
 			}
@@ -365,6 +376,11 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 		{
 			// Le serpent mange une pomme, faisons-la disparaitre et faisons grandir le serpent !
 			grid.SetCell(headPos.x, headPos.y, CellType::None);
+			sf::Vector2i sendPommePos(headPos.x, headPos.y);
+
+			std::vector<std::uint8_t> sendSnakeBuffer = SerializeEatToServer(sendPommePos);
+
+			SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
 			snake.Grow();
 			break;
 		}

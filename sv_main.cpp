@@ -315,6 +315,21 @@ int server(SOCKET sock)
 									SendData(c.socket, messageToSend.data(), messageToSend.size());
 								}
 							}
+							if (code == OpcodeEat) {
+
+								std::memcpy(&receivedMessage[0], &client.pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
+
+								// On retire la taille que nous de traiter des donnees en attente
+								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
+								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+
+								for (Client& c : clients)
+								{
+									if (c.socket == client.socket) continue;
+
+									SendData(c.socket, messageToSend.data(), messageToSend.size());
+								}
+							}
 
 #pragma region MyRegion
 

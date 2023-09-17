@@ -2,6 +2,9 @@
 #include "sh_constants.hpp"
 #include <cassert>
 
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+
 // Calcule la rotation à appliquer aux pi�ces du serpent pour l'affichage
 float computeRotationFromDirection(const sf::Vector2i& direction)
 {
@@ -57,10 +60,11 @@ Snake::Snake()
 	Respawn(spawnPosition, m_followingDir);
 }
 
-Snake::Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id) :
+Snake::Snake(const sf::Vector2i& spawnPosition, const sf::Vector2i& direction, const sf::Color& color, int id, std::string name) :
 m_color(color),
 m_followingDir(direction),
-clientId(id)
+clientId(id),
+m_snakeName(name)
 {
 	Respawn(spawnPosition, direction);
 }
@@ -87,7 +91,7 @@ void Snake::Advance(sf::Vector2i position)
 	m_body[0] = position;
 }
 
-void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources) const
+void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font font) const
 {
 	for (std::size_t i = 0; i < m_body.size(); ++i)
 	{
@@ -130,6 +134,15 @@ void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources) const
 
 		renderTarget.draw(*sprite);
 	}
+
+	sf::Text text;
+	text.setString(m_snakeName);
+	text.setFont(font);
+	text.setCharacterSize(20);
+	text.setFillColor(sf::Color::Black);
+	text.setPosition(GetHeadPosition().x * cellSize, GetHeadPosition().y * cellSize - cellSize / 2);
+
+	renderTarget.draw(text);
 }
 
 const std::vector<sf::Vector2i>& Snake::GetBody() const
@@ -190,6 +203,11 @@ bool Snake::TestCollision(const sf::Vector2i& position, bool testHead)
 	}
 
 	return false;
+}
+
+void Snake::ChangeName(std::string name)
+{
+	m_snakeName = name;
 }
 
 int Snake::GetId()

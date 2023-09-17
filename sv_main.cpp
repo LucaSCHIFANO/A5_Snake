@@ -115,10 +115,15 @@ int server(SOCKET sock)
 	{
 		int positionx;
 		int positiony;
+		appleStock(int x, int y) 
+		{
+			positionx = x;
+			positiony = y;
+		}
 	};
 
 	std::vector<appleStock> appleStorage;
-	int appleCount = 0;
+
 
 	// Boucle infinie pour continuer d'accepter des clients
 	for (;;)
@@ -207,7 +212,7 @@ int server(SOCKET sock)
 						std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
 						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
 						SendData(client.socket, messageToSend.data(), messageToSend.size());
-					}						
+					}
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
@@ -331,14 +336,8 @@ int server(SOCKET sock)
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
+								appleStorage.push_back(appleStock((int)receivedMessage[0], (int)receivedMessage[1]));
 
-								// Partie qui pose problème, on stock les coordonnées
-								appleStorage[appleCount].positionx = (int)receivedMessage[0];
-								appleStorage[appleCount].positiony = (int)receivedMessage[1];
-
-								std::cout << (int)receivedMessage[0] << (int)receivedMessage[1] << endl;
-
-								appleCount++;
 
 								for (Client& c : clients)
 								{
@@ -355,13 +354,23 @@ int server(SOCKET sock)
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
-								// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
-								for (int i = 0; i < appleStorage.size(); i++)
+								//// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
+								//for (int i = 0; i < appleStorage.size(); i++)
+								//{
+								//	if (appleStorage[i].positionx == (int)receivedMessage[0] && appleStorage[i].positionx == (int)receivedMessage[1])
+								//	{
+								//		appleStorage.erase(appleStorage.begin() + i);
+								//		appleCount--;
+								//	}
+								//}
+
+								auto it = appleStorage.begin();
+								for (it = appleStorage.begin(); it != appleStorage.end(); it++)
 								{
-									if (appleStorage[i].positionx == (int)receivedMessage[0] && appleStorage[i].positionx == (int)receivedMessage[1])
+									if (it->positionx == (int)receivedMessage[0] && it->positionx == (int)receivedMessage[1])
 									{
-										appleStorage.erase(appleStorage.begin() + i);
-										appleCount--;
+										it = appleStorage.erase(it);
+										break;
 									}
 								}
 

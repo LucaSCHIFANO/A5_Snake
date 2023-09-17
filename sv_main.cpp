@@ -8,6 +8,7 @@
 #include <iostream> //< std::cout/std::cerr
 #include <string> //< std::string / std::string_view
 #include <thread> //< std::thread
+#include <vector>
 
 // Sous Windows il faut linker ws2_32.lib (Propriétés du projet => �diteur de lien => Entr�e => D�pendances suppl�mentaires)
 // Ce projet est �galement configur� en C++17 (ce n'est pas n�cessaire à winsock)
@@ -17,6 +18,8 @@
 Squelette d'un serveur de Snake
 //////
 */
+
+using namespace std;
 
 // On d�clare un prototype des fonctions que nous allons d�finir plus tard
 // (en C++ avant d'appeler une fonction il faut dire au compilateur qu'elle existe, quitte à la d�finir apr�s)
@@ -52,7 +55,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	int r = server(sock);
+	int r = server(sock);	
 
 	// Comme dans le premier code, on n'oublie pas de fermer les sockets d�s qu'on en a plus besoin
 	closesocket(sock);
@@ -105,6 +108,16 @@ int server(SOCKET sock)
 	// Temps entre les ticks (tours de jeu)
 	sf::Time tickInterval = sf::seconds(tickDelay);
 	sf::Time nextTick = clock.getElapsedTime() + tickInterval;
+
+	// On déclare de quoi stoquer les pommes
+	struct appleStock
+	{
+		int positionx;
+		int positiony;
+	};
+
+	std::vector<appleStock> appleStorage;
+	int appleCount = 0;
 
 	// Boucle infinie pour continuer d'accepter des clients
 	for (;;)
@@ -185,6 +198,14 @@ int server(SOCKET sock)
 					inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, strAddr, INET_ADDRSTRLEN);
 
 					std::cout << "client #" << client.id << " connected from " << strAddr << std::endl;
+
+					// On rajoute les pommes au join d'un nouveau joueur
+					for (int i = 0; i < appleStorage.size(); i++)
+					{
+						std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
+						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
+						SendData(client.socket, messageToSend.data(), messageToSend.size());
+					}						
 
 					// Ici nous pourrions envoyer un message à tous les clients pour indiquer la connexion d'un nouveau client
 
@@ -308,6 +329,15 @@ int server(SOCKET sock)
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
+
+								// Partie qui pose problème, on stock les coordonnées
+								appleStorage[appleCount].positionx = (int)receivedMessage[0];
+								appleStorage[appleCount].positiony = (int)receivedMessage[1];
+
+								std::cout << (int)receivedMessage[0] << (int)receivedMessage[1] << endl;
+
+								appleCount++;
+
 								for (Client& c : clients)
 								{
 									if (c.socket == client.socket) continue;
@@ -322,6 +352,16 @@ int server(SOCKET sock)
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+
+								// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
+								for (int i = 0; i < appleStorage.size(); i++)
+								{
+									if (appleStorage[i].positionx == (int)receivedMessage[0] && appleStorage[i].positionx == (int)receivedMessage[1])
+									{
+										appleStorage.erase(appleStorage.begin() + i);
+										appleCount--;
+									}
+								}
 
 								for (Client& c : clients)
 								{

@@ -36,11 +36,13 @@ void SendData(SOCKET sock, const void* data, std::size_t dataLength)
 }
 
 
+
 enum Opcode
 {
 	OpcodeConnection = 0,
-	OpcodeSnake = 1,
-	OpcodeApple = 2
+	OpcodeSnakePosition = 1,
+	OpcodeApple = 2,
+	OpcodeSnakeDeath = 3
 };
 
 std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
@@ -50,18 +52,18 @@ std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
 	//int verticale
 	//horizontal
 
-	std::int8_t horizontal = direction.x;
-	std::int8_t vertical= direction.y;
+	std::uint8_t horizontal = direction.x;
+	std::uint8_t vertical= direction.y;
 
 	//Send Message
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::int8_t) + sizeof(std::int8_t);
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
 	size = htons(size);
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::int8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::int8_t)], &vertical, sizeof(std::int8_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakePosition;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 
 
 	return sendBuffer;
@@ -75,20 +77,54 @@ std::vector<std::uint8_t> SerializeSnakeToClient(sf::Vector2i direction, int id)
 	//int verticale
 	//horizontal
 
-	std::int8_t horizontal = direction.x;
-	std::int8_t vertical = direction.y;
+	std::uint8_t horizontal = direction.x;
+	std::uint8_t vertical = direction.y;
 
 	//Send Message
-	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::int8_t) + sizeof(std::int8_t);
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t);
 	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
 	size = htons(size);
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnake;
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakePosition;
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::int8_t));
-	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::int8_t)], &vertical, sizeof(std::int8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeDeathToServer()
+{
+	//size
+	//opcode
+
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakeDeath;
+
+	return sendBuffer;
+}
+
+std::vector<std::uint8_t> SerializeDeathToClient(int id)
+{
+	//size
+	//opcode
+	//id 
+	
+	//Send Message
+	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t);
+	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size);
+	size = htons(size);
+
+	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
+	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakeDeath;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
 
 	return sendBuffer;
 }

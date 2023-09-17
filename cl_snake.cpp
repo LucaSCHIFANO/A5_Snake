@@ -76,6 +76,17 @@ void Snake::Advance()
 	m_body[0] += m_followingDir;
 }
 
+void Snake::Advance(sf::Vector2i position)
+{
+	for (std::size_t i = m_body.size() - 1; i != 0; i--)
+	{
+		auto& pos = m_body[i];
+		pos = m_body[i - 1];
+	}
+
+	m_body[0] = position;
+}
+
 void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources) const
 {
 	for (std::size_t i = 0; i < m_body.size(); ++i)

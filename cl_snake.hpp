@@ -16,6 +16,7 @@ public:
 
 	// Fait avancer le serpent dans la direction suivie
 	void Advance();
+	void Advance(sf::Vector2i position);
 	
 	// Gère l'affichage du serpent (ainsi que l'orientation des sprites qui le composent en fonction de la direction de chaque partie du corps)
 	void Draw(sf::RenderTarget& renderTarget, Resources& resources) const;

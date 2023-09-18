@@ -1,7 +1,6 @@
 #include "cl_snake.hpp"
 #include "sh_constants.hpp"
 #include <cassert>
-
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
@@ -141,7 +140,7 @@ void Snake::Draw(sf::RenderTarget& renderTarget, Resources& resources, sf::Font 
 	text.setCharacterSize(20);
 	text.setFillColor(color);
 	
-	text.setPosition(GetHeadPosition().x * cellSize - text.getGlobalBounds().getSize().x/2, GetHeadPosition().y * cellSize - cellSize * 1.25);
+	text.setPosition(GetHeadPosition().x * cellSize - text.getGlobalBounds().width/2, GetHeadPosition().y * cellSize - cellSize * 1.25);
 	//text.setPosition(GetHeadPosition().x * cellSize - (text.getCharacterSize()/2) * (text.getString().getSize()/2), GetHeadPosition().y * cellSize - cellSize * 1.25);
 
 	renderTarget.draw(text);

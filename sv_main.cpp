@@ -362,9 +362,10 @@ int server(SOCKET sock)
 								auto it = appleStorage.begin();
 								for (it = appleStorage.begin(); it != appleStorage.end(); it++)
 								{
-									if (it->positionx == (int)receivedMessage[0] && it->positionx == (int)receivedMessage[1])
+									if (it->positionx == (int)receivedMessage[0] && it->positiony == (int)receivedMessage[1])
 									{
-										it = appleStorage.erase(it);
+										std::cout << "apple deleted" << std::endl;
+										appleStorage.erase(it);
 										break;
 									}
 								}

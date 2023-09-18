@@ -109,20 +109,6 @@ std::vector<std::uint8_t> SerializeSnakeBodyToClient(int clientId, const std::ve
 	return sendBuffer;
 }
 
-//std::vector<std::uint8_t> SerializeSnakeBodyToClient(int clientId, const std::vector<std::uint8_t>& body)
-//{
-//	uint16_t size = sizeof(std::uint8_t) + sizeof(std::uint8_t) + body.size();
-//	std::vector<std::uint8_t> sendBuffer(sizeof(std::uint16_t) + size); 
-//	size = htons(size);
-//
-//	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
-//	sendBuffer[sizeof(std::uint16_t)] = OpcodeSnakeBody;
-//	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &clientId, sizeof(std::uint8_t));
-//	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &body, sizeof(std::uint8_t));
-//
-//	return sendBuffer;
-//}
-
 std::vector<std::uint8_t> SerializeSnakeToServer(sf::Vector2i direction)
 {
 	//size

@@ -209,7 +209,7 @@ int server(SOCKET sock)
 					for (int i = 0; i < appleStorage.size(); i++)
 					{
 						//std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
-						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
+						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony));
 						SendData(client.socket, messageToSend.data(), messageToSend.size());
 					}
 
@@ -329,7 +329,7 @@ int server(SOCKET sock)
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
-								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+								std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]));
 
 								appleStorage.push_back(appleStock((int)receivedMessage[0], (int)receivedMessage[1]));
 
@@ -347,7 +347,7 @@ int server(SOCKET sock)
 
 								// On retire la taille que nous de traiter des donnees en attente
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
-								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
+								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]));
 
 								//// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
 								//for (int i = 0; i < appleStorage.size(); i++)

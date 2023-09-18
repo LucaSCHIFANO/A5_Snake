@@ -266,7 +266,7 @@ std::vector<std::uint8_t> SerializeEatToServer(sf::Vector2i position)
 	return sendBuffer;
 }
 
-std::vector<std::uint8_t> SerializeEatToClient(sf::Vector2i position)
+std::vector<std::uint8_t> SerializeEatToClient(sf::Vector2i position, int id)
 {
 	//size
 	//opcode
@@ -284,6 +284,7 @@ std::vector<std::uint8_t> SerializeEatToClient(sf::Vector2i position)
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeEat;
+	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 

@@ -54,7 +54,7 @@ Snake::Snake()
 {
 	sf::Vector2i spawnPosition(0, 0);
 	m_followingDir = sf::Vector2i(0, 1);
-	m_color = sf::Color::Blue;
+	m_color = sf::Color::Red;
 	clientId = 0;
 	Respawn(spawnPosition, m_followingDir);
 }

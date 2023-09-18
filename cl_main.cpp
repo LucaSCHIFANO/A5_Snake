@@ -233,10 +233,15 @@ void game(SOCKET sock, std::string name)
 
 				}
 				else if (code == OpcodeSnakeBody) {
+
 					std::vector<std::int8_t> receivedMessage(messageSize);
 					std::memcpy(&receivedMessage[0], &pendingData[sizeof(messageSize) + sizeof(uint8_t)], messageSize - sizeof(uint8_t));
-
 					int id = (int)receivedMessage[0];
+					
+					std::cout << "A new foe has appared! Snake#" << id << " join the battle!" << std::endl;
+					Snake clientSnake(sf::Vector2i(gridWidth / 2, gridHeight / 2), sf::Vector2i(1, 0), sf::Color::Red, id, "Snake");
+					enemySnakes.emplace(id, clientSnake);
+
 					std::vector<sf::Vector2i> body;
 
 					for (size_t i = 1; i < messageSize - sizeof(uint8_t); i++)
@@ -246,7 +251,7 @@ void game(SOCKET sock, std::string name)
 
 					}
 					pendingData.erase(pendingData.begin(), pendingData.begin() + handledSize);
-					enemySnakes[(int)receivedMessage[0]].SetBody(body);
+					enemySnakes[id].SetBody(body);
 
 				}
 			}

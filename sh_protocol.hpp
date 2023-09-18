@@ -235,7 +235,6 @@ std::vector<std::uint8_t> SerializeAppleToClient(sf::Vector2i position)
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeApple;
-	//memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 
@@ -285,7 +284,6 @@ std::vector<std::uint8_t> SerializeEatToClient(sf::Vector2i position)
 
 	memcpy(&sendBuffer[0], &size, sizeof(std::uint16_t));
 	sendBuffer[sizeof(std::uint16_t)] = OpcodeEat;
-	//memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t)], &id, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &horizontal, sizeof(std::uint8_t));
 	memcpy(&sendBuffer[sizeof(std::uint16_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t) + sizeof(std::uint8_t)], &vertical, sizeof(std::uint8_t));
 

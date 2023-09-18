@@ -208,7 +208,6 @@ int server(SOCKET sock)
 					// On rajoute les pommes au join d'un nouveau joueur
 					for (int i = 0; i < appleStorage.size(); i++)
 					{
-						//std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
 						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony));
 						SendData(client.socket, messageToSend.data(), messageToSend.size());
 					}

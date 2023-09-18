@@ -241,7 +241,6 @@ void game(SOCKET sock, std::string name)
 
 					for (size_t i = 1; i < messageSize - sizeof(uint8_t); i++)
 					{
-						std::cout << "x: " << (int)receivedMessage[i] << ", y :" << (int)receivedMessage[i + 1] << std::endl;
 						body.push_back(sf::Vector2i((int)receivedMessage[i], (int)receivedMessage[i + 1]));
 						i ++;
 
@@ -402,12 +401,6 @@ void tick(Grid& grid, Snake& snake, SOCKET sock, std::map<int, Snake>& enemySnak
 	std::vector<std::uint8_t> sendSnakeBuffer = SerializeSnakeToServer(snake.GetHeadPosition());
 	SendData(sock, sendSnakeBuffer.data(), sendSnakeBuffer.size());
 	
-	/*auto it = enemySnakes.begin();
-	for (it = enemySnakes.begin(); it != enemySnakes.end(); it++)
-	{
-		it->second.Advance();
-	}*/
-
 	// On teste la collision de la t�te du serpent avec la grille
 	sf::Vector2i headPos = snake.GetHeadPosition();
 	switch (grid.GetCell(headPos.x, headPos.y))

@@ -208,7 +208,6 @@ int server(SOCKET sock)
 					// On rajoute les pommes au join d'un nouveau joueur
 					for (int i = 0; i < appleStorage.size(); i++)
 					{
-						//std::cout << appleStorage[i].positionx << appleStorage[i].positiony << std::endl;
 						std::vector<std::uint8_t> messageToSend = SerializeAppleToClient(sf::Vector2i(appleStorage[i].positionx, appleStorage[i].positiony), client.id);
 						SendData(client.socket, messageToSend.data(), messageToSend.size());
 					}
@@ -349,22 +348,11 @@ int server(SOCKET sock)
 								client.pendingData.erase(client.pendingData.begin(), client.pendingData.begin() + handledSize);
 								std::vector<std::uint8_t> messageToSend = SerializeEatToClient(sf::Vector2i((int)receivedMessage[0], (int)receivedMessage[1]), client.id);
 
-								//// On retire les coordonnées en checkant à quelle partie du vector elles correspondent
-								//for (int i = 0; i < appleStorage.size(); i++)
-								//{
-								//	if (appleStorage[i].positionx == (int)receivedMessage[0] && appleStorage[i].positionx == (int)receivedMessage[1])
-								//	{
-								//		appleStorage.erase(appleStorage.begin() + i);
-								//		appleCount--;
-								//	}
-								//}
-
 								auto it = appleStorage.begin();
 								for (it = appleStorage.begin(); it != appleStorage.end(); it++)
 								{
 									if (it->positionx == (int)receivedMessage[0] && it->positiony == (int)receivedMessage[1])
 									{
-										std::cout << "apple deleted" << std::endl;
 										appleStorage.erase(it);
 										break;
 									}
@@ -406,7 +394,6 @@ int server(SOCKET sock)
 
 								for (size_t i = 1; i < (int)messageSize - sizeof(uint8_t); i++)
 								{
-									std::cout << "x : " << (int)receivedMessage[i] << ", y : " << (int)receivedMessage[i + 1] << std::endl;
 									_body.push_back(sf::Vector2i((int)receivedMessage[i], (int)receivedMessage[i + 1]));
 									i++;
 
